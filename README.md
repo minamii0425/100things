@@ -1,4 +1,4 @@
-# 導入パッケージ
+## 導入パッケージ
 
 axios, aspida
 ```bash
@@ -27,3 +27,20 @@ Chakra UI
 # npm i @chakra-ui/react
 ```
 
+
+```bash
+# npm i typescript ts-node @types/node --save-dev
+```
+
+## Prisma
+
+```bash
+# npm prisma init
+```
+
+`prisma/schema.prisma`と.`.env`が生成される
+
+なぜか初回の`npx prisma migrate dev`コマンドが効かないので代わりに`db push`を実行する
+```
+# npx prisma db push
+```
