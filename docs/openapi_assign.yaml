@@ -1,0 +1,3484 @@
+# openapi: 3.0.3
+# info:
+#   title: TSDL Operation Web App
+#   description: TSDL Operation Web App API仕様
+#   version: 1.0.0
+# servers:
+#   - url: "/api/v1"
+#   - url: "https://tsdloppapp.wdc1a.ciocloud.nonprod.intranet.ibm.com/api/v1 "
+# tags:
+#   - name: Assign DB dept
+#     description: Everything about department
+#   - name: Assign DB user
+#     description: Everything about user in assigndoc DB
+#   - name: Assign DB resource
+#     description: Everything about resource
+#   - name: Assign DB auth
+#     description: Everything about authorities
+#   - name: Assign DB project
+#     description: Everything about projects
+#   - name: Assign DB assigndoc
+#     description: Everything about assigndocs
+#   - name: Assign DB lock
+#     description: Locked state about resource and assigndocs
+#   - name: Assign DB admin
+#     description: admin settings
+#   - name: Contractor DB admin
+#     description: Everything about user in contractor DB
+#   - name: Contractor DB user
+#     description: Everything about user in contractor DB
+#   - name: Contractor File
+#     description: Integration with Box
+openapi: 3.0.3
+info:
+  title: 100Things App API
+  description: 100Things App API仕様書
+  version: 1.0.0
+servers:
+  - url: "http://localhost:3011/api/"
+    description: 開発環境
+  - url: "https://100things.vercel.app/api/"
+    description: 本番環境
+tags:
+  - name: Todos
+    description: Todos関連
+  - name: コメント
+    description: コメント関連
+  - name: タグ
+    description: タグ関連
+paths:
+  /assign/dept:
+    post:
+      tags:
+        - Assign DB dept # 上で登録したタグはここで指定する
+      summary: "部門を登録するためのAPI(Phase1,task1-1)" # エンドポイントのサマリ
+      operationId: saveDept # これは何？
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId" # モデル(このスキーマの型でGETしている？)
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody: # リクエストボディ
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Depts"
+        required: true
+      responses: #レスポンス この形で返ってくるよということ？
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      description: "" # このAPIの説明
+    get:
+      tags:
+        - Assign DB dept
+      summary: "部署の一覧を表示(Phase1,task1-1)"
+      operationId: getDept
+      parameters: # このパラメータを添えてGETリクエストを送る？ /deptへのGETリクエストは、x-ibm-serial-idと、x-ibm-w3-idと、brandの３つをつかう。
+        - in: header # ヘッダー：リクエストの詳細情報
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: brand
+          description: brand
+      responses: # レスポンス。リクエストが成功すると、Deptsスキーマの形で返ってくる。deptCodeとbrandCodeが返ってくる。
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Depts"
+              examples:
+                example-1:
+                  value:
+                    - deptCode: SAM01
+                      brandCode: stri
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      description: ""
+  /assign/user:
+    get:
+      summary: "組織コード(複数可能)、brandCodeを指定して社員を取得(Phase1,task1-2)"
+      operationId: getPeopleByBrandOrDeptCodes
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: deptCodes
+          in: query
+          description: 組織コード
+          schema:
+            $ref: "#/components/schemas/DeptCodes"
+        - name: brandCode
+          in: query
+          description: ブランドコード
+          schema:
+            $ref: "#/components/schemas/BrandCode"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/People"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB user
+    patch:
+      summary: "DB登録されているDEPTに応じてユーザーテーブルをリフレッシュする"
+      operationId: refleshUsers
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB user
+    delete:
+      summary: "指定したユーザーを削除するAPI"
+      operationId: deleteUserById
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: ibmSerialId
+          in: query
+          description: 削除する対象の社員ID
+          required: true
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB user
+  /assign/auth:
+    post:
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Auth"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB auth
+    delete:
+      summary: "ACLを削除する"
+      operationId: deleteUserAuthorities
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - in: query
+          name: w3id
+          schema:
+            $ref: "#/components/schemas/Mail"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Auth"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB auth
+    get:
+      summary: "ACLを取得する"
+      operationId: getUserAuthorities
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Auth"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB auth
+    put:
+      summary: "ACLを更新する(一括)"
+      operationId: updateUserAuthorities
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Auth"
+        required: true
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB auth
+    patch:
+      summary: "ACLを更新する(ユーザー単位)"
+      operationId: updateUserAuthority
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Auth"
+        required: true
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB auth
+  /assign/myAuth:
+    get:
+      summary: "ログインユーザーの権限を取得する"
+      operationId: getMyAuthorities
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAuth"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB auth
+  /assign/resource:
+    get:
+      tags:
+        - Assign DB resource
+      summary: "社員IDまたは組織コード、月を指定してResourceを取得(Phase1, task1-3))"
+      description: Target月に対して向こう14ヶ月分のデータを取得する。クエリに社員IDのみの場合ユーザー単位で、deptのみを指定した場合dept単位で取得する
+      operationId: getResourceByIdOrDeptOrBrand
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: ibmSerialId
+          in: query
+          description: 社員ID
+          required: false
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+        - name: deptCode
+          in: query
+          description: 組織コード
+          required: false
+          schema:
+            $ref: "#/components/schemas/DeptCode"
+        - name: brandCode
+          in: query
+          description: ブランドコード
+          required: false
+          schema:
+            $ref: "#/components/schemas/BrandCode"
+        - name: targetMonth
+          in: query
+          description: 取得対象の月を指定する
+          required: true
+          schema:
+            $ref: "#/components/schemas/Month"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Resources"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Assign DB resource
+      summary: "表で編集したデータをリクエストとする(バルクアップデート)(Phase1, task1-3)"
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Resources"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      operationId: putResource
+    patch:
+      tags:
+        - Assign DB resource
+      summary: 表で編集した部門のResource値をリクエストとする(バルクアップデート)*depricated
+      operationId: saveResource
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: deptCode
+          in: query
+          description: 組織コード
+          required: false
+          schema:
+            $ref: "#/components/schemas/DeptCode"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustingResources"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /assign/resource/dept:
+    get:
+      tags:
+        - Assign DB resource
+      summary: "組織コード、月を指定して部門単位のResourceを取得(Phase1, task1-3))"
+      description: 組織コードまたはブランドコードをクエリする。Target月に対して向こう14ヶ月分のデータを取得する。元々データが入っていなかった場合resource値はユーザーごとのresourceを合計した値で返す
+      operationId: getDeptResourceByIdOrDept
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: deptCode
+          in: query
+          description: 組織コード
+          required: false
+          schema:
+            $ref: "#/components/schemas/DeptCode"
+        - name: brandCode
+          in: query
+          description: ブランドコード
+          required: false
+          schema:
+            $ref: "#/components/schemas/BrandCode"
+        - name: targetMonth
+          in: query
+          description: 取得対象の月を指定する
+          required: true
+          schema:
+            $ref: "#/components/schemas/Month"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeptResources"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Assign DB resource
+      summary: "表で編集したデータをリクエストとする(バルクアップデート)(Phase1, task1-3)"
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeptResources"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      operationId: putDeptResource
+  /assign/resource/brand:
+    get:
+      tags:
+        - Assign DB resource
+      summary: "ブランドまたは指定せずにブランド単位のResourceを取得(Phase1, task1-3))"
+      description: ブランドコードをクエリしない場合全てのブランドごとのリソースを取得する。Target月に対して向こう14ヶ月分のデータを取得する。元々データが入っていなかった場合resource値は部門ごとのresourceを合計した値で返す
+      operationId: getBrandResource
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: brandCode
+          in: query
+          description: ブランドコード
+          required: false
+          schema:
+            $ref: "#/components/schemas/BrandCode"
+        - name: targetMonth
+          in: query
+          description: 取得対象の月を指定する
+          required: true
+          schema:
+            $ref: "#/components/schemas/Month"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandResources"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Assign DB resource
+      summary: "表で編集したデータをリクエストとする(バルクアップデート)(Phase1, task1-3)"
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrandResources"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      operationId: putBrandResource
+  /assign/resource/lock/user:
+    patch:
+      tags:
+        - Assign DB resource
+      summary: 指定月以前のデータをロックし、指定月以降のデータをアンロックする
+      operationId: userResourceLock
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LockReq"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /assign/resource/lock/dept:
+    patch:
+      tags:
+        - Assign DB resource
+      summary: 指定月以前の部門リソースデータをロック、アンロックする
+      operationId: deptResourceLock
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LockReq"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /assign/resource/lock/brand:
+    patch:
+      tags:
+        - Assign DB resource
+      summary: 指定月以前のデータをロック、アンロックする
+      operationId: brandResourceLock
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LockReq"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /assign/project:
+    get:
+      tags:
+        - Assign DB project
+      summary: "マネージャーが取得するプロジェクトの一覧"
+      description: マネージャーの所属する部門(Dept)のプロジェクトを取得する
+      operationId: getProjects
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: isNextYear
+          in: query
+          description: 取得対象の年を指定する
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Projects"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      summary: ""
+      operationId: postProject
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody: # 画面での入力内容？ POSTする内容？
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+        description: ""
+      tags:
+        - Assign DB project
+    delete:
+      summary: "Projectの削除"
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectKey"
+        description: ""
+      tags:
+        - Assign DB project
+  /assign/assigndoc:
+    get:
+      tags:
+        - Assign DB assigndoc
+      summary: "マネージャーが取得するassignDocの一覧"
+      description: マネージャーの所属する部門(Dept)のassignDocを取得する(DeptCode、BrandCode共に指定しなかった場合、すべてのassignDocを取得する)
+      operationId: getAssignDocs
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+        - name: isNextYear
+          in: query
+          description: 取得対象の年を指定する
+          required: false
+          schema:
+            type: boolean
+        - name: deptCode
+          in: query
+          description: 取得対象の部門を指定する
+          schema:
+            $ref: "#/components/schemas/DeptCode"
+        - name: brandCode
+          in: query
+          description: 取得対象のブランドを指定する
+          schema:
+            $ref: "#/components/schemas/BrandCode"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignDocs"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      summary: "社員にプロジェクトをassignする。"
+      description: "レスポンスには配属前社員の生成された社員ID等の一覧を返却する"
+      operationId: postAssignDoc
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemporaryAssigns"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignDocs"
+        description: ""
+      tags:
+        - Assign DB assigndoc
+    put:
+      summary: ""
+      operationId: putAssignDoc
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemporaryAssigns"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignDocs"
+        description: ""
+      tags:
+        - Assign DB assigndoc
+    delete:
+      summary: "assigndocの削除"
+      operationId: deleteAssognDoc
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignDocKey"
+        description: ""
+      tags:
+        - Assign DB assigndoc
+  /assign/assigndoc/lock:
+    patch:
+      summary: ""
+      operationId: lockAssignDoc
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LockReq"
+        description: ""
+      tags:
+        - Assign DB assigndoc
+  /assign/actualAssignDoc:
+    post:
+      summary: AssignのActual値をCSVからインポートしてサーバーに送信する
+      operationId: postActualAssignDocs
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActualAssignDocWithErrors"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/ActualAssignDoc"
+        description: ""
+      tags:
+        - Assign DB assigndoc
+  /assign/lock:
+    get:
+      summary: "ロック状態を取得する"
+      operationId: getLockedState
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LockedState"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      tags:
+        - Assign DB lock
+    post:
+      summary: "ロック指定する"
+      operationId: saveLockedState
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LockStateRequest"
+        description: ""
+      tags:
+        - Assign DB lock
+  /assign/currentYear:
+    get:
+      tags:
+        - "Assign DB admin"
+      summary: 設定年度を取得する
+      operationId: getCurrentYearMaster
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentYearMaster"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - "Assign DB admin"
+      summary: 年度を設定する
+      operationId: saveCurrentYearMaster
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CurrentYearMaster"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/myAuth:
+    get:
+      tags:
+        - Contractor DB admin
+      operationId: getContractorMyAuth
+      summary: Contractor DBログインユーザーの権限取得
+      description: Contractor DBログインユーザーの権限取得
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractorMyAuth"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/user:
+    get:
+      tags:
+        - Contractor DB user
+      operationId: getContractorUsers
+      summary: ユーザー一覧取得
+      description: ユーザー一覧取得
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Users"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Contractor DB user
+      operationId: putContractorUsers
+      summary: 一括更新
+      description: 一括更新
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Contractor DB user
+      operationId: deleteContractorUsers
+      summary: 一括削除
+      description: 一括削除
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/IbmSerialId"
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/user/{userId}:
+    get:
+      tags:
+        - Contractor DB user
+      operationId: getContractorUserDetail
+      summary: ユーザー情報取得
+      description: ユーザー情報取得
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: ibmSerialNumber
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetail"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Contractor DB user
+      operationId: putContractorUserDetail
+      summary: ユーザー情報更新
+      description: ユーザー情報更新
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDetail"
+        required: true
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+          description: ibmSerialNumber
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/user/refresh:
+    put:
+      tags:
+        - Contractor DB user
+      operationId: putContractorUserRefresh
+      description: ユーザー情報更新
+      summary: ""
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/cas/refresh:
+    put:
+      tags:
+        - Contractor DB user
+      operationId: putContractorCASRefresh
+      description: CAS情報更新
+      summary: ""
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/osmSecEduEvidence/files:
+    get:
+      tags:
+        - Contractor File
+      operationId: listsContractorOsmSecEduEvidenceFile
+      summary: osmSecEduEvidenceファイル一覧取得
+      description: osmSecEduEvidenceファイル一覧取得
+      parameters:
+        - in: query
+          name: osmDrmsId
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileInfos"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/osmDrmsDeleteEvidence/files:
+    get:
+      tags:
+        - Contractor File
+      operationId: listsContractorOsmDrmsDeleteEvidenceFile
+      summary: osmDrmsDeleteEvidenceファイル一覧取得
+      description: osmDrmsDeleteEvidenceファイル一覧取得
+      parameters:
+        - in: query
+          name: osmDrmsId
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileInfos"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/osmOtherEvidence/files:
+    get:
+      tags:
+        - Contractor File
+      operationId: listsContractorOsmOtherEvidenceFile
+      summary: osmOtherEvidenceファイル一覧取得
+      description: osmOtherEvidenceファイル一覧取得
+      parameters:
+        - in: query
+          name: osmDrmsId
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileInfos"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/osmSecEduEvidence/file:
+    get:
+      tags:
+        - Contractor File
+      operationId: getContractorOsmSecEduEvidenceFile
+      summary: OsmSecEduEvidenceファイルダウンロード
+      description: OsmSecEduEvidenceファイルダウンロード
+      parameters:
+        - in: query
+          name: fileid
+          schema:
+            $ref: "#/components/schemas/FileId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                description: If the file is available to be downloaded the response will include a Location header for the file on dl.boxcloud.com.The dl.boxcloud.com URL is not persistent and clients will need to follow the redirect in order to actually download the file.
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - Contractor File
+      operationId: postContractorOsmSecEduEvidenceFile
+      summary: OsmSecEduEvidenceファイルアップロード
+      description: OsmSecEduEvidenceファイルアップロード
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+        - in: query
+          name: osmDrmsId
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Contractor File
+      operationId: deleteContractorOsmSecEduEvidenceFile
+      summary: OsmSecEduEvidenceファイル削除
+      description: OsmSecEduEvidenceファイル削除
+      parameters:
+        - in: query
+          name: fileid
+          schema:
+            $ref: "#/components/schemas/FileId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/osmDrmsDeleteEvidence/file:
+    get:
+      tags:
+        - Contractor File
+      operationId: getContractorOsmDrmsDeleteEvidenceFile
+      summary: OsmDrmsDeleteEvidenceファイルダウンロード
+      description: OsmDrmsDeleteEvidenceファイルダウンロード
+      parameters:
+        - in: query
+          name: fileid
+          schema:
+            $ref: "#/components/schemas/FileId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                description: If the file is available to be downloaded the response will include a Location header for the file on dl.boxcloud.com.The dl.boxcloud.com URL is not persistent and clients will need to follow the redirect in order to actually download the file.
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - Contractor File
+      operationId: postContractorOsmDrmsDeleteEvidenceFile
+      summary: OsmDrmsDeleteEvidenceファイルアップロード
+      description: OsmDrmsDeleteEvidenceファイルアップロード
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+        - in: query
+          name: osmDrmsId
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Contractor File
+      operationId: deleteContractorOsmDrmsDeleteEvidenceFile
+      summary: OsmDrmsDeleteEvidenceファイル削除
+      description: OsmDrmsDeleteEvidenceファイル削除
+      parameters:
+        - in: query
+          name: fileid
+          schema:
+            $ref: "#/components/schemas/FileId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /contractor/osmOtherEvidence/file:
+    get:
+      tags:
+        - Contractor File
+      operationId: getContractorOsmOtherEvidenceFile
+      summary: OsmOtherEvidenceファイルダウンロード
+      description: OsmOtherEvidenceファイルダウンロード
+      parameters:
+        - in: query
+          name: fileid
+          schema:
+            $ref: "#/components/schemas/FileId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "302":
+          description: Found
+          headers:
+            Location:
+              schema:
+                type: string
+                description: If the file is available to be downloaded the response will include a Location header for the file on dl.boxcloud.com.The dl.boxcloud.com URL is not persistent and clients will need to follow the redirect in order to actually download the file.
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - Contractor File
+      operationId: postContractorOsmOtherEvidenceFile
+      summary: OsmOtherEvidenceファイルアップロード
+      description: OsmOtherEvidenceファイルアップロード
+      parameters:
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+        - in: query
+          name: osmDrmsId
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: true
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Contractor File
+      operationId: deleteContractorOsmOtherEvidenceFile
+      summary: OsmOtherEvidenceファイル削除
+      description: OsmOtherEvidenceファイル削除
+      parameters:
+        - in: query
+          name: fileid
+          schema:
+            $ref: "#/components/schemas/FileId"
+          required: true
+          description: fileId
+        - in: header
+          name: x-ibm-serial-id
+          schema:
+            $ref: "#/components/schemas/IbmSerialId"
+          required: false
+        - in: header
+          name: x-ibm-w3-id
+          schema:
+            $ref: "#/components/schemas/Mail"
+          required: false
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+components:
+  schemas:
+    Date:
+      type: string
+      format: date
+    DateTime:
+      type: string
+      format: date-time
+      example: "2018-03-20T09:12:28Z"
+    IbmSerialId:
+      type: string
+      maxLength: 6
+      example: A05407
+    Mail:
+      type: string
+      example: xxxxxx@ibm.com
+    DeptCode:
+      type: string
+      maxLength: 6
+      example: SAM001
+    BrandCode:
+      type: string
+      maxLength: 4
+      example: BRA1
+    ProjectCode:
+      type: string
+      maxLength: 6
+      example: BRA1AA
+    Description:
+      type: string
+      maxLength: 15
+      example: "XX Project"
+    DeptCodes:
+      type: array
+      items:
+        $ref: "#/components/schemas/DeptCode"
+    Month:
+      type: integer
+      description: 1-12
+      minimum: 1
+      maximum: 12
+    Year:
+      type: integer
+      description: 1-12
+      minimum: 1000
+      maximum: 9999
+    Ilc:
+      type: string
+      enum:
+        - "Yes"
+        - "No"
+    Access:
+      type: string
+      enum:
+        - "S"
+        - "E"
+        - "V"
+    Status:
+      type: string
+      enum:
+        - "F"
+        - "A"
+        - "B"
+        - "C"
+    IsLocked:
+      type: string
+      description: "1...ロック中"
+      enum:
+        - "1"
+        - "0"
+    Auth:
+      type: object
+      properties:
+        brandCode:
+          $ref: "#/components/schemas/BrandCode"
+        access:
+          $ref: "#/components/schemas/Access"
+        w3id:
+          $ref: "#/components/schemas/Mail"
+    UserAuth:
+      type: object
+      properties:
+        isAdmin:
+          type: boolean
+        userDept:
+          $ref: "#/components/schemas/DeptCode"
+        userBrand:
+          $ref: "#/components/schemas/BrandCode"
+        acl:
+          type: array
+          items:
+            $ref: "#/components/schemas/Auth"
+    Dev100:
+      type: string
+      enum:
+        - "Yes"
+        - Yes2
+        - "No"
+    PmValue:
+      type: number
+      format: double
+      example: 0.8
+    ResourceValue:
+      type: number
+      format: double
+      example: 6.8
+    Comment:
+      type: string
+      maxLength: 50
+      example: 8月配属XXさん用
+    PostResponseBody:
+      type: object
+      description: Post成功時のレスポンス。常にtrue
+      properties:
+        isSucceed:
+          type: boolean
+          example: true
+    Dept:
+      type: object
+      properties:
+        deptCode:
+          $ref: "#/components/schemas/DeptCode"
+        brandCode:
+          $ref: "#/components/schemas/BrandCode"
+      required:
+        - deptCode
+        - brandCode
+    Depts:
+      type: array
+      items:
+        $ref: "#/components/schemas/Dept"
+      example:
+        - deptCode: SAM01
+          brandCode: stri
+        - deptCode: SAM02
+          brandCode: stri
+    Person:
+      type: object
+      properties:
+        ibmSerialId:
+          $ref: "#/components/schemas/IbmSerialId"
+        empName:
+          type: string
+          example: Yoshiharu Fukui
+        dept:
+          $ref: "#/components/schemas/DeptCode"
+        brand:
+          $ref: "#/components/schemas/BrandCode"
+      title: ""
+      description: ""
+    People:
+      type: array
+      items:
+        $ref: "#/components/schemas/Person"
+    Resource:
+      type: object
+      properties:
+        ibmSerialId:
+          $ref: "#/components/schemas/IbmSerialId"
+        empName:
+          type: string
+          example: Yoshiharu Fukui
+        dept:
+          $ref: "#/components/schemas/DeptCode"
+        brand:
+          $ref: "#/components/schemas/BrandCode"
+        ilc:
+          $ref: "#/components/schemas/Ilc"
+        dev100:
+          $ref: "#/components/schemas/Dev100"
+        pm:
+          $ref: "#/components/schemas/PmValue"
+        month:
+          $ref: "#/components/schemas/Month"
+        year:
+          $ref: "#/components/schemas/Year"
+        isLocked:
+          $ref: "#/components/schemas/IsLocked"
+    Resources:
+      type: array
+      items:
+        $ref: "#/components/schemas/Resource"
+      example:
+        - ibmSerialId: A05407
+          empName: Yoshiharu Fukui
+          dept: SAM01
+          brand: BRA00
+          ilc: "Yes"
+          dev100: "Yes"
+          pm: 1
+          month: 5
+          year: 2022
+    DeptResource:
+      type: object
+      properties:
+        brandCode:
+          $ref: "#/components/schemas/BrandCode"
+        deptCode:
+          $ref: "#/components/schemas/DeptCode"
+        resourceValue:
+          $ref: "#/components/schemas/ResourceValue"
+        targetMonth:
+          $ref: "#/components/schemas/Month"
+        targetYear:
+          $ref: "#/components/schemas/Year"
+        isLocked:
+          $ref: "#/components/schemas/IsLocked"
+    DeptResources:
+      type: array
+      items:
+        $ref: "#/components/schemas/DeptResource"
+    BrandResource:
+      type: object
+      properties:
+        brandCode:
+          $ref: "#/components/schemas/BrandCode"
+        resourceValue:
+          $ref: "#/components/schemas/ResourceValue"
+        targetMonth:
+          $ref: "#/components/schemas/Month"
+        targetYear:
+          $ref: "#/components/schemas/Year"
+        isLocked:
+          $ref: "#/components/schemas/IsLocked"
+    BrandResources:
+      type: array
+      items:
+        $ref: "#/components/schemas/BrandResource"
+    AdjustingResource:
+      type: object
+      properties:
+        resourceValue:
+          $ref: "#/components/schemas/PmValue"
+        month:
+          $ref: "#/components/schemas/Month"
+        year:
+          $ref: "#/components/schemas/Year"
+    AdjustingResources:
+      type: array
+      items:
+        $ref: "#/components/schemas/AdjustingResource"
+    LockReq:
+      type: object
+      properties:
+        month:
+          $ref: "#/components/schemas/Month"
+        year:
+          $ref: "#/components/schemas/Year"
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string
+      xml:
+        name: "##default"
+    ApiErrResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          format: int32
+          example: 400
+        errCode:
+          type: string
+          maxLength: 4
+          minLength: 4
+          example: E001
+        errMessage:
+          type: string
+          example: 必須項目が入力されていません
+    Project:
+      title: Project
+      type: object
+      properties:
+        prjCode:
+          $ref: "#/components/schemas/ProjectCode"
+        description:
+          $ref: "#/components/schemas/Description"
+        status:
+          $ref: "#/components/schemas/Status"
+        year:
+          $ref: "#/components/schemas/Year"
+        deptCode:
+          $ref: "#/components/schemas/DeptCode"
+        brandCode:
+          $ref: "#/components/schemas/BrandCode"
+    Projects:
+      title: Projects
+      type: array
+      items:
+        $ref: "#/components/schemas/Project"
+    AssignDocs:
+      title: AssignDocs
+      type: array
+      items:
+        $ref: "#/components/schemas/AssignDoc"
+    AssignDoc:
+      title: AssignDoc
+      type: object
+      properties:
+        brand:
+          $ref: "#/components/schemas/BrandCode"
+        dept:
+          $ref: "#/components/schemas/DeptCode"
+        ibmSerialId:
+          $ref: "#/components/schemas/IbmSerialId"
+        empName:
+          type: string
+          example: Yoshiharu Fukui
+        prjCode:
+          $ref: "#/components/schemas/ProjectCode"
+        status:
+          $ref: "#/components/schemas/Status"
+        month:
+          $ref: "#/components/schemas/Month"
+        pm:
+          $ref: "#/components/schemas/PmValue"
+        description:
+          $ref: "#/components/schemas/Description"
+        comment:
+          $ref: "#/components/schemas/Comment"
+        year:
+          $ref: "#/components/schemas/Year"
+        isLocked:
+          $ref: "#/components/schemas/IsLocked"
+    AssignDocKey:
+      type: object
+      properties:
+        ibmSerialId:
+          required: true
+          $ref: "#/components/schemas/IbmSerialId"
+        prjCode:
+          required: true
+          $ref: "#/components/schemas/ProjectCode"
+        year:
+          required: true
+          $ref: "#/components/schemas/Year"
+    TemporaryAssign:
+      type: object
+      properties:
+        brand:
+          $ref: "#/components/schemas/BrandCode"
+        dept:
+          $ref: "#/components/schemas/DeptCode"
+        ibmSerialId:
+          $ref: "#/components/schemas/IbmSerialId"
+        prjCode:
+          $ref: "#/components/schemas/ProjectCode"
+    TemporaryAssigns:
+      type: array
+      items:
+        $ref: "#/components/schemas/TemporaryAssign"
+    ActualAssignDoc:
+      type: object
+      properties:
+        year:
+          $ref: "#/components/schemas/Year"
+        month:
+          $ref: "#/components/schemas/Month"
+        prjCode:
+          $ref: "#/components/schemas/ProjectCode"
+        brand:
+          $ref: "#/components/schemas/BrandCode"
+        dept:
+          $ref: "#/components/schemas/DeptCode"
+        emp:
+          $ref: "#/components/schemas/IbmSerialId"
+        pm:
+          $ref: "#/components/schemas/PmValue"
+    ActualAssignDocWithError:
+      type: object
+      description: yearとmonthは念のため追加
+      properties:
+        year:
+          $ref: "#/components/schemas/Year"
+        month:
+          $ref: "#/components/schemas/Month"
+        prjCode:
+          $ref: "#/components/schemas/ProjectCode"
+        brand:
+          $ref: "#/components/schemas/BrandCode"
+        dept:
+          $ref: "#/components/schemas/DeptCode"
+        emp:
+          $ref: "#/components/schemas/IbmSerialId"
+        pm:
+          $ref: "#/components/schemas/PmValue"
+        errorMessage:
+          type: string
+          example: Not Found
+    ActualAssignDocWithErrors:
+      type: array
+      items:
+        $ref: "#/components/schemas/ActualAssignDocWithError"
+    LockedWhen:
+      type: object
+      properties:
+        year:
+          $ref: "#/components/schemas/Year"
+        month:
+          $ref: "#/components/schemas/Month"
+        lockedAt:
+          $ref: "#/components/schemas/DateTime"
+    LockReqDate:
+      type: object
+      properties:
+        year:
+          $ref: "#/components/schemas/Year"
+        month:
+          $ref: "#/components/schemas/Month"
+    LockedState:
+      type: object
+      properties:
+        userData:
+          $ref: "#/components/schemas/LockedWhen"
+        resourceData:
+          $ref: "#/components/schemas/LockedWhen"
+        assignDoc:
+          $ref: "#/components/schemas/LockedWhen"
+        actualImport:
+          $ref: "#/components/schemas/LockedWhen"
+    LockStateRequest:
+      type: object
+      properties:
+        userData:
+          $ref: "#/components/schemas/LockReqDate"
+        resourceData:
+          $ref: "#/components/schemas/LockReqDate"
+        assignDoc:
+          $ref: "#/components/schemas/LockReqDate"
+    CurrentYearMaster:
+      type: object
+      properties:
+        currentYear:
+          $ref: "#/components/schemas/Year"
+        isCheckedNextYear:
+          type: boolean
+    ProjectKey:
+      type: object
+      properties:
+        prjCode:
+          required: true
+          $ref: "#/components/schemas/ProjectCode"
+        year:
+          required: true
+          $ref: "#/components/schemas/Year"
+    ContName:
+      type: string
+      maxLength: 30
+    OsmControl:
+      description: "1.対象 0.非対象"
+      type: string
+      enum:
+        - "1"
+        - "0"
+    OsmControlExcepReason:
+      type: string
+    OsmContractStatus:
+      description: "1.有 0.無 9.終了"
+      type: string
+      enum:
+        - "1"
+        - "0"
+        - "9"
+    OsmPoNumber:
+      type: string
+    OsmContractType:
+      description: "01.施設内業務委託 02.施設外業務委託 03.派遣 04.臨時雇用 99.その他"
+      type: string
+      enum:
+        - "01"
+        - "02"
+        - "03"
+        - "04"
+        - "99"
+    OsmContractTypeNote:
+      type: string
+    Url:
+      type: string
+      format: url
+    OsmNote:
+      type: string
+    OsmPcStatus:
+      description: "1.IBM貸与PC 2.所属会社PC 3.お客様資産PC 4.占有PC無し"
+      type: string
+      enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+    OsmNotesStatus:
+      description: "1.作成済み 0.作成無し 9.削除済み"
+      type: string
+      enum:
+        - "1"
+        - "0"
+        - "9"
+    OsmRemoteAccess:
+      description: "1.作成済み 0.作成無し 9.削除済み"
+      type: string
+      enum:
+        - "1"
+        - "0"
+        - "9"
+    CasBadgeNumber:
+      type: string
+    OsmCasMgrName:
+      type: string
+    OsmCasStatus:
+      description: "1.作成済み 0.作成無し 9.返却済み"
+      type: string
+      enum:
+        - "1"
+        - "0"
+        - "9"
+    NotesMail:
+      type: string
+    OsmManagerName:
+      type: string
+      maxLength: 100
+    OsmRecordCreateName:
+      type: string
+    OsmRecordUpdateName:
+      type: string
+    CheckStatus:
+      description: "1.Active 0.Inactive 9.NA"
+      type: string
+      enum:
+        - "1"
+        - "0"
+        - "9"
+    OsmKiReport:
+      description: "1.要 0.不要"
+      type: string
+      enum:
+        - "1"
+        - "0"
+    OsmKiReportStatus:
+      description: 1.テスト済み 0.テスト待 9.NA
+      type: string
+      enum:
+        - "1"
+        - "0"
+        - "9"
+    OsmContAdmin:
+      type: object
+      properties:
+        w3id:
+          $ref: "#/components/schemas/Mail"
+        contName:
+          $ref: "#/components/schemas/ContName"
+    User:
+      type: object
+      properties:
+        deptCode:
+          $ref: "#/components/schemas/DeptCode"
+        osmDrmsId:
+          $ref: "#/components/schemas/IbmSerialId"
+        contName:
+          $ref: "#/components/schemas/ContName"
+        osmControl:
+          $ref: "#/components/schemas/OsmControl"
+        osmControlExcepReason:
+          $ref: "#/components/schemas/OsmControlExcepReason"
+        osmContractStatus:
+          $ref: "#/components/schemas/OsmContractStatus"
+        osmPoNumber:
+          $ref: "#/components/schemas/OsmPoNumber"
+        osmContractStartDate:
+          $ref: "#/components/schemas/Date"
+        osmContractEndDate:
+          $ref: "#/components/schemas/Date"
+        osmWorkEndDate:
+          $ref: "#/components/schemas/Date"
+        osmContractType:
+          $ref: "#/components/schemas/OsmContractType"
+        osmContractTypeNote:
+          $ref: "#/components/schemas/OsmContractTypeNote"
+        osmSecEduLatestDate:
+          $ref: "#/components/schemas/Date"
+        osmSecEduEvidence:
+          $ref: "#/components/schemas/Url"
+        osmDrmsDeleteEvidence:
+          $ref: "#/components/schemas/Url"
+        osmOtherEvidence:
+          $ref: "#/components/schemas/Url"
+        osmNote:
+          $ref: "#/components/schemas/OsmNote"
+        osmPcStatus:
+          $ref: "#/components/schemas/OsmPcStatus"
+        osmNotesidStatus:
+          $ref: "#/components/schemas/OsmNotesStatus"
+        osmRemoteAccess:
+          $ref: "#/components/schemas/OsmRemoteAccess"
+        osmPcReturnDate:
+          $ref: "#/components/schemas/Date"
+        osmPcdataDeleteDate:
+          $ref: "#/components/schemas/Date"
+        osmPcdataAccessDeleteDate:
+          $ref: "#/components/schemas/Date"
+        casDrmsId:
+          $ref: "#/components/schemas/IbmSerialId"
+        casBadgeNumber:
+          $ref: "#/components/schemas/CasBadgeNumber"
+        casContName:
+          $ref: "#/components/schemas/ContName"
+        osmCasMgrName:
+          $ref: "#/components/schemas/OsmCasMgrName"
+        casMgrW3id:
+          $ref: "#/components/schemas/Mail"
+        osmCasStatus:
+          $ref: "#/components/schemas/OsmCasStatus"
+        osmCasReturnDate:
+          $ref: "#/components/schemas/Date"
+        casDeactDate:
+          $ref: "#/components/schemas/Date"
+        contW3id:
+          $ref: "#/components/schemas/Mail"
+        notesMail:
+          $ref: "#/components/schemas/NotesMail"
+        managerSerialNumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmManagerName:
+          $ref: "#/components/schemas/OsmManagerName"
+        osmManagerMail:
+          $ref: "#/components/schemas/Mail"
+        contrExpireDate:
+          $ref: "#/components/schemas/Date"
+        drmsDeleteDate:
+          $ref: "#/components/schemas/Date"
+        osmRecordCreateDate:
+          $ref: "#/components/schemas/DateTime"
+        osmRecordCreateIbmserialnumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmRecordCreateName:
+          $ref: "#/components/schemas/OsmRecordCreateName"
+        osmRecorddUpdateDate:
+          $ref: "#/components/schemas/DateTime"
+        osmRecordUpdateIbmserialnumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmRecordUpdateName:
+          $ref: "#/components/schemas/OsmRecordUpdateName"
+        osmRecordValidationDate:
+          $ref: "#/components/schemas/DateTime"
+        osmRecordValidationIbmserialnumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmRecordValidationName:
+          description: "w3id"
+          $ref: "#/components/schemas/Mail"
+        osmDrmsidCheckStatus:
+          $ref: "#/components/schemas/CheckStatus"
+        osmDrmsidCheckDate:
+          $ref: "#/components/schemas/DateTime"
+        osmCasCheckStatus:
+          $ref: "#/components/schemas/CheckStatus"
+        osmCasCheckDate:
+          $ref: "#/components/schemas/DateTime"
+        osmContAdmin1:
+          $ref: "#/components/schemas/OsmContAdmin"
+        osmContAdmin2:
+          $ref: "#/components/schemas/OsmContAdmin"
+        osmKiReport:
+          $ref: "#/components/schemas/OsmKiReport"
+        osmKiReportStatus:
+          $ref: "#/components/schemas/OsmKiReportStatus"
+    ContractorMyAuth:
+      description: ContractorDBに関する権限取得
+      type: object
+      properties:
+        isAdmin:
+          type: boolean
+          description: System管理者か否か
+    Users:
+      type: array
+      items:
+        $ref: "#/components/schemas/User"
+    UserDetail:
+      type: object
+      properties:
+        deptCode:
+          $ref: "#/components/schemas/DeptCode"
+        osmDrmsId:
+          $ref: "#/components/schemas/IbmSerialId"
+        contName:
+          $ref: "#/components/schemas/ContName"
+        osmControl:
+          $ref: "#/components/schemas/OsmControl"
+        osmControlExcepReason:
+          $ref: "#/components/schemas/OsmControlExcepReason"
+        osmContractStatus:
+          $ref: "#/components/schemas/OsmContractStatus"
+        osmPoNumber:
+          $ref: "#/components/schemas/OsmPoNumber"
+        osmContractStartDate:
+          $ref: "#/components/schemas/Date"
+        osmContractEndDate:
+          $ref: "#/components/schemas/Date"
+        osmWorkEndDate:
+          $ref: "#/components/schemas/Date"
+        osmContractType:
+          $ref: "#/components/schemas/OsmContractType"
+        osmContractTypeNote:
+          $ref: "#/components/schemas/OsmContractTypeNote"
+        osmSecEduLatestDate:
+          $ref: "#/components/schemas/Date"
+        osmSecEduEvidence:
+          $ref: "#/components/schemas/Url"
+        osmDrmsDeleteEvidence:
+          $ref: "#/components/schemas/Url"
+        osmOtherEvidence:
+          $ref: "#/components/schemas/Url"
+        osmNote:
+          $ref: "#/components/schemas/OsmNote"
+        osmPcStatus:
+          $ref: "#/components/schemas/OsmPcStatus"
+        osmNotesidStatus:
+          $ref: "#/components/schemas/OsmNotesStatus"
+        osmRemoteAccess:
+          $ref: "#/components/schemas/OsmRemoteAccess"
+        osmPcReturnDate:
+          $ref: "#/components/schemas/Date"
+        osmPcdataDeleteDate:
+          $ref: "#/components/schemas/Date"
+        osmPcdataAccessDeleteDate:
+          $ref: "#/components/schemas/Date"
+        casDrmsId:
+          $ref: "#/components/schemas/IbmSerialId"
+        casBadgeNumber:
+          $ref: "#/components/schemas/CasBadgeNumber"
+        casContName:
+          $ref: "#/components/schemas/ContName"
+        osmCasMgrName:
+          $ref: "#/components/schemas/OsmCasMgrName"
+        casMgrW3id:
+          $ref: "#/components/schemas/Mail"
+        osmCasStatus:
+          $ref: "#/components/schemas/OsmCasStatus"
+        osmCasReturnDate:
+          $ref: "#/components/schemas/Date"
+        casDeactDate:
+          $ref: "#/components/schemas/Date"
+        contW3id:
+          $ref: "#/components/schemas/Mail"
+        notesMail:
+          $ref: "#/components/schemas/NotesMail"
+        managerSerialNumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmManagerName:
+          $ref: "#/components/schemas/OsmManagerName"
+        osmManagerMail:
+          $ref: "#/components/schemas/Mail"
+        contrExpireDate:
+          $ref: "#/components/schemas/Date"
+        drmsDeleteDate:
+          $ref: "#/components/schemas/Date"
+        osmRecordCreateDate:
+          $ref: "#/components/schemas/DateTime"
+        osmRecordCreateIbmserialnumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmRecordCreateName:
+          $ref: "#/components/schemas/OsmRecordCreateName"
+        osmRecorddUpdateDate:
+          $ref: "#/components/schemas/DateTime"
+        osmRecordUpdateIbmserialnumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmRecordUpdateName:
+          $ref: "#/components/schemas/OsmRecordUpdateName"
+        osmRecordValidationDate:
+          $ref: "#/components/schemas/DateTime"
+        osmRecordValidationIbmserialnumber:
+          $ref: "#/components/schemas/IbmSerialId"
+        osmRecordValidationName:
+          description: "w3id"
+          $ref: "#/components/schemas/Mail"
+        osmDrmsidCheckStatus:
+          $ref: "#/components/schemas/CheckStatus"
+        osmDrmsidCheckDate:
+          $ref: "#/components/schemas/DateTime"
+        osmCasCheckStatus:
+          $ref: "#/components/schemas/CheckStatus"
+        osmCasCheckDate:
+          $ref: "#/components/schemas/DateTime"
+        osmContAdmin1:
+          $ref: "#/components/schemas/OsmContAdmin"
+        osmContAdmin2:
+          $ref: "#/components/schemas/OsmContAdmin"
+        osmKiReport:
+          $ref: "#/components/schemas/OsmKiReport"
+        osmKiReportStatus:
+          $ref: "#/components/schemas/OsmKiReportStatus"
+    FileId:
+      description: The unique identifier that represents a file. The ID for any file can be determined by visiting a file in the web application and copying the ID from the URL. For example, for the URL https://*.app.box.com/files/123 the file_id is 123.
+      type: string
+      pattern: '^\d{13}$'
+    FileName:
+      description: Box上でのファイル名
+      type: string
+      example: test.txt
+    FileInfo:
+      type: object
+      properties:
+        fileId:
+          $ref: "#/components/schemas/FileId"
+        fileName:
+          $ref: "#/components/schemas/FileName"
+    FileInfos:
+      type: array
+      items:
+        $ref: "#/components/schemas/FileInfo"

@@ -1,0 +1,1663 @@
+openapi: 3.0.3
+info:
+  title: 100Things App API
+  description: 100Things App API仕様書
+  version: 1.0.0
+servers:
+  - url: "http://localhost:3011/api/"
+    description: 開発環境
+  - url: "https://100things.vercel.app/api/"
+    description: 本番環境
+tags:
+  - name: Todos
+    description: Todos関連
+  - name: コメント
+    description: コメント関連
+  - name: タグ
+    description: タグ関連
+  - name: Todos-コメント
+    description: Todoとコメントの中間テーブル関連
+  - name: Todos-タグ
+    description: Todoとタグの中間テーブル関連
+paths:
+  # Todo:
+  /todos:
+    get:
+      tags:
+        - Todos
+      summary: "Todoの全件取得"
+      description: "登録されているすべてのTodoを取得する。"
+      operationId: getTodos
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todos"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - Todos
+      summary: "Todoの登録"
+      description: "Todoの登録を行う。"
+      operationId: postTodo
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Todos
+      summary: "Todoの全件削除"
+      description: "Todoの全件削除を行う。"
+      operationId: deleteTodos
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoIDs"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /todos/{id}:
+    get:
+      tags:
+        - Todos
+      summary: "Todoの取得"
+      description: "指定したIDを持つTodoを取得する。"
+      operationId: getTodoWithId
+      parameters:
+        - in: path
+          name: TodoID
+          schema:
+            $ref: "#/components/schemas/TodoID"
+          required: true
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Todos
+      summary: "Todoの削除"
+      description: "指定したIDを持つTodoの削除を行う。"
+      operationId: deleteTodoWithID
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: TodoID
+          schema:
+            $ref: "#/components/schemas/TodoID"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todos"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Todos
+      summary: "Todoの更新"
+      description: "指定したIDを持つTodoを更新する。"
+      operationId: putTodo
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: TodoID
+          schema:
+            $ref: "#/components/schemas/TodoID"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo"
+        required: true
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /comments:
+    get:
+      tags:
+        - コメント
+      summary: "コメントの全件取得"
+      description: "登録されているすべてのコメントを取得する。"
+      operationId: getComments
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comments"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - コメント
+      summary: "コメントの登録"
+      description: "コメントの登録を行う。"
+      operationId: postComment
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Comment"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - コメント
+      summary: "コメントの全件削除"
+      description: "コメントの全件削除を行う。"
+      operationId: deleteComments
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentIDs"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /comments/{id}:
+    get:
+      tags:
+        - コメント
+      summary: "コメントの一件取得"
+      description: "指定したIDを持つコメントを取得する。"
+      operationId: getCommentWithId
+      parameters:
+        - in: path
+          name: CommentID
+          schema:
+            $ref: "#/components/schemas/CommentID"
+          required: true
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - コメント
+      summary: "コメントの削除"
+      description: "指定したIDを持つコメントの削除を行う。"
+      operationId: deleteCommentWithID
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: CommentID
+          schema:
+            $ref: "#/components/schemas/CommentID"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - コメント
+      summary: "コメントの更新"
+      description: "指定したIDを持つコメントを更新する。"
+      operationId: putComment
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: CommentID
+          schema:
+            $ref: "#/components/schemas/CommentID"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Comment"
+        required: true
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /tags:
+    get:
+      tags:
+        - タグ
+      summary: "タグの全件取得"
+      description: "タグを全件取得する。"
+      operationId: getTags
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tags"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - タグ
+      summary: "タグの登録"
+      description: "タグの登録を行う。"
+      operationId: postTag
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tag"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - タグ
+      summary: "タグの削除"
+      description: "タグの複数削除を行う。"
+      operationId: deleteTags
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagIDs"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /tags/{id}:
+    get:
+      tags:
+        - タグ
+      summary: "タグの取得"
+      description: "あるIDに登録されたタグを取得する。"
+      operationId: getTagWithID
+      parameters:
+        - in: path
+          name: TagID
+          schema:
+            $ref: "#/components/schemas/TagID"
+          required: true
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - タグ
+      summary: "タグの削除"
+      description: "あるIDを持つタグの削除を行う。"
+      operationId: deleteTagWithID
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: TagID
+          schema:
+            $ref: "#/components/schemas/TagID"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - タグ
+      summary: "タグの更新"
+      description: "指定したIDを持つタグを更新する。"
+      operationId: putTag
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: TagID
+          schema:
+            $ref: "#/components/schemas/TagID"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tag"
+        required: true
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /todos_comments:
+    get:
+      tags:
+        - Todos-コメント
+      summary: "Todo-コメントの全件取得"
+      description: "登録されているすべてのTodos-コメントを取得する。"
+      operationId: getTodos_Comments
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todos_Comments"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - Todos-コメント
+      summary: "Todo-コメントの登録"
+      description: "Todo-コメントの登録を行う。"
+      operationId: postTodo_Comment
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo_Comment"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Todos-コメント
+      summary: "Todo-コメントの全件削除"
+      description: "Todo-コメントの複数削除を行う。"
+      operationId: deleteTodos_Comments
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo_CommentIDs"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /todos_comments/{id}:
+    get:
+      tags:
+        - Todos-コメント
+      summary: "Todos-コメントの一件取得"
+      description: "あるIDに登録されたTodos-コメントを取得する。"
+      operationId: getTodo_CommentWithID
+      parameters:
+        - in: path
+          name: Todos_CommentID
+          schema:
+            $ref: "#/components/schemas/Todo_CommentID"
+          required: true
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo_Comment"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Todos-コメント
+      summary: "Todos-コメントの削除"
+      description: "あるIDを持つTodos-コメントの削除を行う。"
+      operationId: deleteTodo_CommentWithID
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: Todos_CommentID
+          schema:
+            $ref: "#/components/schemas/Todo_CommentID"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Todos-コメント
+      summary: "Todos-コメントの更新"
+      description: "指定したIDを持つTodos-コメントを更新する。"
+      operationId: putTodo_Comment
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: Todos_CommentID
+          schema:
+            $ref: "#/components/schemas/Todo_CommentID"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo_Comment"
+        required: true
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /todos_tags:
+    get:
+      tags:
+        - Todos-タグ
+      summary: "Todos-タグの全件取得"
+      description: "登録されているすべてのTodos-タグを取得する。"
+      operationId: getTodos_Tags
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todos_Tags"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - Todos-タグ
+      summary: "Todo-タグの登録"
+      description: "Todo-タグの登録を行う。"
+      operationId: postTodo_Tag
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo_Tag"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Todos-タグ
+      summary: "Todo-タグの全件削除"
+      description: "Todo-タグの複数削除を行う。"
+      operationId: deleteTodos_Tags
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo_TagIDs"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /todos_tags/{id}:
+    get:
+      tags:
+        - Todos-タグ
+      summary: "Todos-タグの一件取得"
+      description: "あるIDに登録されたTodos-タグを取得する。"
+      operationId: getTodo_TagWithID
+      parameters:
+        - in: path
+          name: Todo_TagID
+          schema:
+            $ref: "#/components/schemas/Todo_TagID"
+          required: true
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo_Tag"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Todos-タグ
+      summary: "Todos-タグの削除"
+      description: "あるIDを持つTodos-タグの削除を行う。"
+      operationId: deleteTodo_TagWithID
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: Todo_TagID
+          schema:
+            $ref: "#/components/schemas/Todo_TagID"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Todos-タグ
+      summary: "Todos-タグの更新"
+      description: "指定したIDを持つTodos-タグを更新する。"
+      operationId: putTodo_Tag
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: Todo_TagID
+          schema:
+            $ref: "#/components/schemas/Todo_TagID"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Todo_Tag"
+        required: true
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+components:
+  schemas:
+    # 共通
+    XApiKey:
+      type: string
+      description: APIキー
+      example: XXXX-XXXX-XXXX-XXXX
+    Token:
+      type: string
+      description: One time Token
+      example: "XXXX-XXXX-XXXX"
+    # Todo
+    TodoID:
+      type: number
+      description: Todo ID
+      example: 1
+    TodoIDs:
+      type: array
+      description: Todo ID(複数)
+      items:
+        $ref: "#/components/schemas/TodoID"
+    TodoName:
+      type: string
+      description: やりたいこと
+      maxLength: 128
+      example: 大藤を見に行く
+    CompleteDate:
+      type: string
+      description: やりたいことを達成した日
+      format: date
+      example: YYYY-MM-DD
+    Location:
+      type: string
+      description: 場所
+      maxLength: 128
+      example: 東京都
+    Status:
+      type: string
+      description: ステータス
+      maxLength: 16
+      enum:
+        - "Undone"
+        - "Planning"
+        - "Done"
+    Description:
+      type: string
+      description: 一行説明
+      maxLength: 512
+      example: 一行説明
+    # コメント
+    CommentID:
+      type: number
+      description: Comment ID
+      example: 1
+    CommentIDs:
+      type: array
+      description: Comment ID(複数)
+      items:
+        $ref: "#/components/schemas/CommentID"
+      example: 1
+    CommentText:
+      type: string
+      description: Todoへのコメント
+      maxLength: 4096
+    CommentAuthor:
+      type: string
+      description: コメントしたユーザー
+      maxLength: 32
+      example: Minami
+    # タグ
+    TagID:
+      type: number
+      description: タグのID
+      example: 1
+    TagIDs:
+      type: array
+      description: タグのID(複数)
+      items:
+        $ref: "#/components/schemas/TagID"
+    TagName:
+      type: string
+      description: タグ
+      example: 旅行
+      maxLength: 32
+    # Todosーコメント
+    Todo_CommentID:
+      type: number
+      description: Todos-コメントテーブルのID
+      example: 1
+    Todo_CommentIDs:
+      type: array
+      description: Todos-コメントテーブルのID(複数)
+      items:
+        $ref: "#/components/schemas/Todo_CommentID"
+    Todo_TagID:
+      type: number
+      description: Todos-タグテーブルのID
+    Todo_TagIDs:
+      type: array
+      description: Todos-タグテーブルのID(複数)
+      items:
+        $ref: "#/components/schemas/Todo_TagID"
+      example: 1
+    # リクエストボディ
+    Todo:
+      type: object
+      description: Todo情報
+      properties:
+        TodoID:
+          $ref: "#/components/schemas/TodoID"
+        TodoName:
+          $ref: "#/components/schemas/TodoName"
+        CompleteDate:
+          $ref: "#/components/schemas/CompleteDate"
+          required: false
+        Location:
+          $ref: "#/components/schemas/Location"
+          required: false
+        Status:
+          $ref: "#/components/schemas/Status"
+          required: false
+        Description:
+          $ref: "#/components/schemas/Description"
+          required: false
+    Todos:
+      type: array
+      description: Todo情報(複数)
+      items:
+        $ref: "#/components/schemas/Todo"
+    Comment:
+      type: object
+      description: コメント情報
+      properties:
+        CommentID:
+          $ref: "#/components/schemas/CommentID"
+        CommentText:
+          $ref: "#/components/schemas/CommentText"
+        CommentAuthor:
+          $ref: "#/components/schemas/CommentAuthor"
+    Comments:
+      type: array
+      description: コメント情報(複数)
+      items:
+        $ref: "#/components/schemas/Comment"
+    Tag:
+      type: object
+      description: タグ
+      properties:
+        TagID:
+          $ref: "#/components/schemas/TagID"
+        TagName:
+          $ref: "#/components/schemas/TagName"
+    Tags:
+      type: array
+      description: タグ情報(複数)
+      items:
+        $ref: "#/components/schemas/Tag"
+    Todo_Comment:
+      type: object
+      description: Todo-コメント
+      properties:
+        Todo_CommentID:
+          $ref: "#/components/schemas/Todo_CommentID"
+        TodoID:
+          $ref: "#/components/schemas/TodoID"
+        CommentID:
+          $ref: "#/components/schemas/CommentID"
+    Todos_Comments:
+      type: array
+      description: Todo-コメント(複数)
+      items:
+        $ref: "#/components/schemas/Todo_Comment"
+    Todo_Tag:
+      type: object
+      description: Todo-タグ
+      properties:
+        Todo_TagID:
+          $ref: "#/components/schemas/Todo_TagID"
+        TodoID:
+          $ref: "#/components/schemas/TodoID"
+        TagID:
+          $ref: "#/components/schemas/TagID"
+    Todos_Tags:
+      type: array
+      description: Todo-タグ(複数)
+      items:
+        $ref: "#/components/schemas/Todo_Tag"
+    # レスポンスボディ
+    PostResponseBody:
+      type: object
+      description: Post成功時のレスポンス。常にtrue
+      properties:
+        isSucceed:
+          type: boolean
+          example: true
+    ApiErrResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          format: int32
+          example: 400
+        errCode:
+          type: string
+          maxLength: 4
+          minLength: 4
+          example: E001
+        errMessage:
+          type: string
+          example: 必須項目が入力されていません

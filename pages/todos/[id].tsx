@@ -1,0 +1,608 @@
+import {
+  Box,
+  Heading,
+  Stack,
+  Image,
+  Text,
+  HStack,
+  Avatar,
+  Textarea,
+  Button,
+  Input,
+  Select,
+  Tag as ChakraTag,
+  Wrap,
+  WrapItem,
+  Flex,
+  Spacer,
+  Editable,
+  EditableInput,
+  EditableTextarea,
+  EditablePreview,
+  ButtonGroup,
+  ButtonSpinner,
+  FormControl,
+} from "@chakra-ui/react";
+import { GetServerSideProps } from "next";
+import { supabase } from "../../libs/supabase";
+import { useRouter } from "next/router";
+import { makeSerializable } from "../../utils/util";
+import {
+  Todo_Tag,
+  Tag,
+  Status,
+  TagName,
+  Todo_Comment,
+  Comment,
+} from "../../aspida_api/@types";
+import prisma from "../../libs/prisma";
+import Layout from "../../components/Layout";
+import Carousel from "../carousel";
+import { useEffect, useState } from "react";
+import {
+  commentClient,
+  todoClient,
+  todoCommentClient,
+} from "../../utils/axiosInstancesServerside";
+import { tagClient } from "../../utils/axiosInstancesServerside";
+import { todoTagClient } from "../../utils/axiosInstancesServerside";
+import { BiTargetLock } from "react-icons/bi";
+
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+  // 変数
+  const ID = Number(query.id);
+
+  // パブリックなBucketから画像の取得
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("images").getPublicUrl(`${ID}.jpg`);
+
+  // Todosテーブルより
+  const TodoResponse = await prisma.todos.findUniqueOrThrow({
+    where: {
+      id: ID,
+    },
+  });
+
+  const convertedTodoResponse = {
+    TodoID: TodoResponse.id,
+    TodoName: TodoResponse.todo_name,
+    Location: TodoResponse.location,
+    Status: TodoResponse.status,
+    CompleteDate: makeSerializable(TodoResponse.complete_date),
+    Description: TodoResponse.description,
+  };
+
+  // Todos-Tagsテーブルより
+  const IntermediateTableResponse = await prisma.todos_Tags.findMany({
+    where: {
+      todo_id: ID,
+    },
+  });
+
+  const convertedIntermediateTableResponse = IntermediateTableResponse.map(
+    (result: any) => {
+      return {
+        TagID: result.tag_id,
+        TodoID: result.todo_id,
+      };
+    }
+  );
+
+  // Tagsテーブルより
+  const TagResponse = await prisma.tags.findMany({});
+  const convertedTagResponse = TagResponse.map((result: any) => {
+    return {
+      TagID: result.id,
+      TagName: result.tag_name,
+    };
+  });
+
+  // Commentテーブルより
+  const CommentResponse = await prisma.comments.findMany({});
+  const convertedCommentResponse = CommentResponse.map((result: any) => {
+    return {
+      CommentID: result.id,
+      CommentText: result.comment_text,
+      CommentAuthor: result.comment_author,
+    };
+  });
+
+  // Todos-Commentテーブルより
+  const IntermediateCommentTableResponse = await prisma.todos_Comments.findMany(
+    {
+      where: {
+        todo_id: ID,
+      },
+    }
+  );
+
+  const convertedIntermediateCommentTableResponse =
+    IntermediateCommentTableResponse.map((result: any) => {
+      return {
+        CommentID: result.comment_id,
+        TodoID: result.todo_id,
+      };
+    });
+
+  return {
+    props: {
+      body: {
+        convertedTodoResponse,
+        convertedIntermediateTableResponse,
+        convertedTagResponse,
+        convertedCommentResponse,
+        convertedIntermediateCommentTableResponse,
+        publicUrl,
+      },
+    },
+  };
+};
+
+const TodoDetailForm = ({ body }: any) => {
+  const router = useRouter();
+  const id = Number(router.query.id);
+
+  // Todoテーブル
+  const TodoArray = body.convertedTodoResponse;
+
+  // Tagsテーブル
+  const TagArray = body.convertedTagResponse;
+
+  // Commentテーブル
+  const CommentArray = body.convertedCommentResponse;
+
+  // 中間テーブル(Todo-コメント)
+  const TodoCommentArray = body.convertedIntermediateCommentTableResponse;
+
+  // 中間テーブル(Todo-タグ)
+  const TodoTagArray = body.convertedIntermediateTableResponse;
+
+  // このTodoIDが持っているタグIDとタグ名の配列
+  const WithTagNameArray = TodoTagArray.map(
+    (intermediateTableObject: Todo_Tag & Tag) => {
+      TagArray.map((tagArrayObject: Tag) => {
+        // IntermediateTableArrayのTagIDとTagArrayのTagIDを比較する
+        if (intermediateTableObject.TagID === tagArrayObject.TagID) {
+          //一致すればそのIDを持つTagNameを配列の要素に追加する
+          intermediateTableObject.TagName = tagArrayObject.TagName;
+        }
+      });
+      return intermediateTableObject;
+    }
+  );
+
+  // このTodoIDが持っているタグIDとコメントの配列
+  const WithCommentTextArray = TodoCommentArray.map(
+    (intermediateCommentTableObject: Todo_Comment & Comment) => {
+      CommentArray.map((commentArrayObject: Comment) => {
+        // IntermediateTableArrayのTagIDとTagArrayのTagIDを比較する
+        if (
+          intermediateCommentTableObject.CommentID ===
+          commentArrayObject.CommentID
+        ) {
+          //一致すればそのIDを持つCommentTextを配列の要素に追加する
+          intermediateCommentTableObject.CommentText =
+            commentArrayObject.CommentText;
+          //一致すればそのIDを持つCommentAuthorを配列の要素に追加する
+          intermediateCommentTableObject.CommentAuthor =
+            commentArrayObject.CommentAuthor;
+        }
+      });
+      return intermediateCommentTableObject;
+    }
+  );
+
+  // 日付のフォーマット変更
+  // if (TodoArray.CompleteDate) {
+  const Date = TodoArray.CompleteDate && TodoArray.CompleteDate;
+  const convertedCompleteDate = Date && Date.substr(0, 10);
+  // return convertedCompleteDate
+  // }
+
+  // あるIDのタグ名のみ抜き出す
+  const SearchTag = (todoID: number, data: Array<Tag>) => {
+    return data
+      .filter((object: any) => todoID === object.TodoID)
+      .map((row: any) => {
+        return row.TagName;
+      });
+  };
+
+  // あるIDのコメントのみ抜き出す
+  const SearchComment = (todoID: number, data: Array<Tag>) => {
+    return data
+      .filter((object: any) => todoID === object.TodoID)
+      .map((row: any) => {
+        return row.CommentText;
+      });
+  };
+
+  // Description--------------------------------------------------------
+  const [inputDescription, setInputDescription] = useState(
+    TodoArray.Description
+  );
+
+  const onSubmitDescription = async (inputData: string) => {
+    // エラーハンドリング
+    // 値の変更なしの場合
+    if (inputData === TodoArray.Description) {
+      return;
+    }
+
+    // 入力値が空欄の場合
+    if (inputData === "") {
+      setInputDescription(TodoArray.Description);
+      return;
+    }
+
+    await todoClient._id(id).$put({
+      body: { Description: inputData, CompleteDate: inputCompleteDate },
+      query: {
+        TodoID: id,
+      },
+    });
+  };
+
+  // タグ--------------------------------------------------------
+  const [inputTag, setInputTag] = useState("＋");
+
+  const [TagFromServer, setTagFromServer] = useState(
+    SearchTag(id, WithTagNameArray)
+  );
+
+  const onSubmitTag = async (inputData: TagName) => {
+    // エラーハンドリング
+    // 値の変更なしの場合
+    if (inputTag === "＋") {
+      return;
+    }
+
+    // 入力値が空欄の場合
+    if (inputTag === "") {
+      setInputTag("＋");
+      return;
+    }
+
+    // そのTodoが入力された値をすでにタグとして持っている場合
+    if (TagFromServer.indexOf(inputData) >= 0) {
+      return;
+    }
+
+    // 入力されたタグがサーバーにあるか確認
+    // Todoが持っているタグをサーバーから取得
+    const newTags = (await tagClient.$get()).map((tag) => {
+      return tag.TagName;
+    });
+
+    // 入力されたタグがTodoになければTagテーブルに送信
+    if (!newTags.includes(inputData)) {
+      const submit = await tagClient.$post({
+        body: { TagName: inputData },
+      });
+
+      // Todoと中間テーブルに送信
+      await todoTagClient.$post({
+        body: {
+          TodoID: id,
+          TagID: Number(submit),
+        },
+      });
+
+      // 入力されたタグがすでにTodoにある場合
+    } else {
+      // 入力したタグのタグIDを取得
+      const TagID = TagArray.filter(
+        (item: Tag) => item.TagName === inputData
+      )[0].TagID;
+
+      // Todoと中間テーブルに送信
+      await todoTagClient.$post({
+        body: {
+          TodoID: id,
+          TagID: TagID,
+        },
+      });
+    }
+
+    // 投稿後、タグの再レンダリング
+    setTagFromServer([...TagFromServer, inputData]);
+
+    // 送信後、＋に戻す
+    setInputTag("＋");
+  };
+
+  // Complete Date--------------------------------------------------------
+  const [inputCompleteDate, setInputCompleteDate] = useState(
+    convertedCompleteDate
+  );
+
+  const onSubmitCompleteDate = async (inputData: string) => {
+    // エラーハンドリング
+    // 値の変更なしの場合
+    if (inputData === convertedCompleteDate) {
+      return;
+    }
+
+    // 入力値が空欄の場合
+    if (inputData === "") {
+      setInputCompleteDate(convertedCompleteDate);
+      return;
+    }
+
+    await todoClient._id(id).$put({
+      body: { CompleteDate: inputData },
+      query: {
+        TodoID: id,
+      },
+    });
+  };
+
+  // Location--------------------------------------------------------
+
+  const [inputLocation, setInputLocation] = useState(TodoArray.Location);
+
+  const onSubmitLocation = async (inputData: string) => {
+    // エラーハンドリング
+    // 値の変更なしの場合
+    if (inputData === TodoArray.Location) {
+      return;
+    }
+
+    // 入力値が空欄の場合
+    if (inputLocation === "") {
+      setInputLocation(TodoArray.Location);
+      return;
+    }
+
+    await todoClient._id(id).$put({
+      body: { Location: inputData, CompleteDate: inputCompleteDate },
+      query: {
+        TodoID: id,
+      },
+    });
+  };
+
+  // Status--------------------------------------------------------
+  const [inputStatus, setInputStatus] = useState(TodoArray.Status);
+  const onSubmitStatus = async (string: Status) => {
+    await todoClient._id(id).$put({
+      body: { Status: string, CompleteDate: inputCompleteDate },
+      query: {
+        TodoID: id,
+      },
+    });
+  };
+
+  // Comments--------------------------------------------------------
+  const [inputComment, setInputComment] = useState("");
+
+  const [CommentFromServer, setCommentFromServer] = useState(
+    SearchComment(id, WithCommentTextArray)
+  );
+
+  const onSubmitComment = async (inputData: TagName) => {
+    // エラーハンドリング
+
+    // 入力値が空欄の場合
+    if (inputComment === "") {
+      return;
+    }
+
+    // 入力されたタグがTodoになければTagテーブルに送信
+    // if (!newTags.includes(inputData)) {
+    const submit = await commentClient.$post({
+      body: {
+        CommentText: inputData,
+        CommentAuthor: "Minami",
+      },
+    });
+
+    // Todoと中間テーブルに送信
+    await todoCommentClient.$post({
+      body: {
+        TodoID: id,
+        CommentID: Number(submit),
+      },
+    });
+
+    // 投稿後、タグの再レンダリング
+    setCommentFromServer([...CommentFromServer, inputData]);
+
+    // 送信後、入力フォームを空に戻す
+    setInputComment("");
+  };
+
+  // enter押下時のsubmitを防止
+  const onEnterDown = (e: any) => {
+    if (e.code === "Enter") e.preventDefault();
+  };
+
+  return (
+    <>
+      <Layout>
+        <Stack padding={10}>
+          <Box mb="1">
+            <Flex>
+              <Heading size="lg" mb="5">
+                {/* {SearchObject(id, "TodoName")} */}
+                {TodoArray.TodoName}
+              </Heading>
+              <Spacer />
+              <Button onClick={() => router.push("/todos")}>←Back</Button>
+            </Flex>
+            <Box mb="3">
+              {/* <Image
+                src={body.publicUrl}
+                alt="Dan Abramov"
+                width="100%"
+                height="300px"
+                objectFit="cover"
+              /> */}
+              <Carousel />
+            </Box>
+            <Editable
+              value={inputDescription}
+              onSubmit={() => onSubmitDescription(inputDescription)}
+              placeholder="クリックで編集"
+            >
+              <EditablePreview />
+              <EditableTextarea
+                onChange={(e) => setInputDescription(e.target.value)}
+              />
+            </Editable>
+          </Box>
+
+          {/* タグ */}
+          <Box>
+            <Box mb="4">
+              <Box mb="2">
+                <Text size="xl" as="b">
+                  Tags
+                </Text>
+              </Box>
+              <HStack>
+                {TagFromServer.map((tag: string) => {
+                  return <ChakraTag key={tag}>{tag}</ChakraTag>;
+                })}
+                <Editable
+                  value={inputTag}
+                  onSubmit={() => onSubmitTag(inputTag)}
+                >
+                  <EditablePreview />
+                  <EditableInput
+                    onChange={(e) => setInputTag(e.target.value)}
+                    onKeyDown={(e) => onEnterDown(e)}
+                  />
+                </Editable>
+              </HStack>
+            </Box>
+          </Box>
+
+          {/* Complete Date・Location・Status */}
+          <Box>
+            <Box mb="4">
+              <Wrap>
+                <WrapItem w="200px">
+                  <Box>
+                    <Box mb="2">
+                      <Text size="xl" as="b">
+                        Complete Date
+                      </Text>
+                    </Box>
+                    <Editable
+                      defaultValue={inputCompleteDate}
+                      onSubmit={() => onSubmitCompleteDate(inputCompleteDate)}
+                      placeholder={"クリックで編集"}
+                    >
+                      <EditablePreview />
+                      <EditableInput
+                        type="date"
+                        onChange={(e) => setInputCompleteDate(e.target.value)}
+                      />
+                    </Editable>
+                  </Box>
+                </WrapItem>
+
+                <WrapItem w="200px">
+                  <Box>
+                    <Box mb="2">
+                      <Text size="xl" as="b">
+                        Location
+                      </Text>
+                    </Box>
+                    <Editable
+                      value={inputLocation}
+                      onSubmit={() => onSubmitLocation(inputLocation)}
+                      placeholder="クリックで編集"
+                    >
+                      <EditablePreview width="200" />
+                      <EditableInput
+                        width="200"
+                        onChange={(e) => setInputLocation(e.target.value)}
+                        onKeyDown={(e) => onEnterDown(e)}
+                      />
+                    </Editable>
+                  </Box>
+                </WrapItem>
+
+                <WrapItem w="200px">
+                  <Box>
+                    <Box mb="2">
+                      <Text size="xl" as="b">
+                        Status
+                      </Text>
+                    </Box>
+                    <Select
+                      defaultValue={inputStatus}
+                      onChange={(e) => onSubmitStatus(e.target.value as Status)}
+                    >
+                      <option value="Undone">Undone</option>
+                      <option value="Planning">Planning</option>
+                      <option value="Done">Done</option>
+                    </Select>
+                  </Box>
+                </WrapItem>
+              </Wrap>
+            </Box>
+          </Box>
+
+          {/* Comments */}
+          <Box>
+            <Box mb="2">
+              <Text size="xl" as="b">
+                Comments
+              </Text>
+            </Box>
+
+            {CommentFromServer.length !== 0 ? (
+              CommentFromServer.map((comment: string, i: number) => {
+                return (
+                  <Box mb="5" key={i}>
+                    <HStack>
+                      <Avatar
+                        name="Dan Abrahmov"
+                        src="https://bit.ly/dan-abramov"
+                      />
+                      <Text fontSize="sm">{comment}</Text>
+                    </HStack>
+                  </Box>
+                );
+              })
+            ) : (
+              <Box mt={3} mb={5}>
+                No Comments
+              </Box>
+            )}
+
+            <FormControl>
+              <Box mb="5">
+                <HStack>
+                  <Avatar
+                    name="Dan Abrahmov"
+                    src="https://bit.ly/dan-abramov"
+                  />
+                  <Textarea
+                    height="100px"
+                    fontSize="sm"
+                    value={inputComment}
+                    onChange={(e) => setInputComment(e.target.value)}
+                  />
+                </HStack>
+              </Box>
+
+              <Flex>
+                <Spacer />
+                <Button onClick={() => onSubmitComment(inputComment)}>
+                  Submit Comment
+                </Button>
+              </Flex>
+            </FormControl>
+          </Box>
+        </Stack>
+      </Layout>
+    </>
+  );
+};
+
+export default TodoDetailForm;
