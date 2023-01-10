@@ -14,6 +14,7 @@ import {
   useColorModeValue,
   useBreakpointValue,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import {
   HamburgerIcon,
@@ -21,6 +22,10 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "@chakra-ui/icons";
+import { useContext, useEffect, useState } from "react";
+import { SessionContext } from "next-auth/react";
+import { useRouter } from "next/router";
+import { supabase } from "../libs/supabase";
 
 interface NavItem {
   label: string;
@@ -32,24 +37,63 @@ interface NavItem {
 const NAV_ITEMS: Array<NavItem> = [
   {
     label: "What's this Site",
-    href: "about",
+    href: "/about",
   },
   {
     label: "100 Things",
     href: "/todos",
   },
   {
-    label: "Learn Design",
-    href: "#",
+    label: "Album",
+    href: "/album",
   },
   {
-    label: "Hire Designers",
-    href: "#",
+    label: "Map",
+    href: "/map",
   },
 ];
 
 const Header = () => {
   const { isOpen, onToggle } = useDisclosure();
+
+  const toast = useToast();
+  const router = useRouter();
+
+  const [pageSession, setPageSession] = useState("");
+  // セッションの取得
+  const getSession = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    // console.log(data.session);
+    setPageSession(data.session?.user.email!);
+  };
+
+  useEffect(() => {
+    getSession();
+  });
+
+  // サインアウト
+  const onClickLogOut = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      toast({
+        title: "LogOut Failure",
+        description: "Cannot Logout",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+
+    toast({
+      title: "Successfully Logged out",
+      description: "Logout Successfully",
+      status: "success",
+      duration: 9000,
+      isClosable: true,
+    });
+    router.push("/");
+  };
 
   return (
     <Box>
@@ -99,27 +143,47 @@ const Header = () => {
           direction={"row"}
           spacing={6}
         >
-          <Button
-            as={"a"}
-            fontSize={"sm"}
-            fontWeight={400}
-            variant={"link"}
-            href={"#"}
-          >
-            Sign In
-          </Button>
-          <Button
-            display={{ base: "none", md: "inline-flex" }}
-            fontSize={"sm"}
-            fontWeight={600}
-            color={"white"}
-            bg={"pink.400"}
-            _hover={{
-              bg: "pink.300",
-            }}
-          >
-            Sign Up
-          </Button>
+          {pageSession === undefined ? (
+            <>
+              <Button
+                as={"a"}
+                fontSize={"sm"}
+                fontWeight={400}
+                variant={"link"}
+                href={"/signin"}
+              >
+                Sign In
+              </Button>
+              <Button
+                as={"a"}
+                display={{ base: "none", md: "inline-flex" }}
+                fontSize={"sm"}
+                fontWeight={600}
+                color={"white"}
+                bg={"pink.400"}
+                _hover={{
+                  bg: "pink.300",
+                }}
+                href={"/signup"}
+              >
+                Sign Up
+              </Button>
+            </>
+          ) : (
+            <Button
+              display={{ base: "none", md: "inline-flex" }}
+              fontSize={"sm"}
+              fontWeight={600}
+              color={"white"}
+              bg={"pink.400"}
+              _hover={{
+                bg: "pink.300",
+              }}
+              onClick={onClickLogOut}
+            >
+              Log Out
+            </Button>
+          )}
         </Stack>
       </Flex>
 

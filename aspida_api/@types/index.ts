@@ -38,6 +38,9 @@ export type CommentText = string
 /** コメントしたユーザー */
 export type CommentAuthor = string
 
+/** コメントしたユーザーのアバターのURL */
+export type CommentAvatar = string
+
 /** タグのID */
 export type TagID = number
 
@@ -59,6 +62,27 @@ export type Todo_TagID = number
 /** Todos-タグテーブルのID(複数) */
 export type Todo_TagIDs = Todo_TagID[]
 
+/** ユーザーのID */
+export type ProfileID = string
+
+/** ユーザーのID(複数) */
+export type ProfileIDs = ProfileID[]
+
+/** ユーザーを更新した日時 */
+export type UpdatedAt = string
+
+/** ユーザー名 */
+export type UserName = string
+
+/** フルネーム */
+export type FullName = string
+
+/** アバターのURL */
+export type AvatarURL = string
+
+/** サイトURL */
+export type WebSite = string
+
 /** Todo情報 */
 export type Todo = {
   TodoID?: TodoID | undefined
@@ -77,6 +101,7 @@ export type Comment = {
   CommentID?: CommentID | undefined
   CommentText?: CommentText | undefined
   CommentAuthor?: CommentAuthor | undefined
+  CommentAvatar?: CommentAvatar | undefined
 }
 
 /** コメント情報(複数) */
@@ -110,6 +135,19 @@ export type Todo_Tag = {
 
 /** Todo-タグ(複数) */
 export type Todos_Tags = Todo_Tag[]
+
+/** ユーザー情報 */
+export type Profile = {
+  ProfileID?: ProfileID | undefined
+  UpdatedAt?: UpdatedAt | undefined
+  UserName?: UserName | undefined
+  FullName?: FullName | undefined
+  AvatarURL?: AvatarURL | undefined
+  WebSite?: WebSite | undefined
+}
+
+/** ユーザー情報(複数) */
+export type Profiles = Profile[]
 
 /** Post成功時のレスポンス。常にtrue */
 export type PostResponseBody = {

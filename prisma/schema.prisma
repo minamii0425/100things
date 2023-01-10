@@ -23,6 +23,7 @@ model Comments {
   id             Int              @id @unique @default(autoincrement())
   comment_author String           @db.VarChar(32)
   comment_text   String           @db.VarChar(4096)
+  comment_avatar String           @db.VarChar(1024)
   Todos_Comments Todos_Comments[]
 }
 

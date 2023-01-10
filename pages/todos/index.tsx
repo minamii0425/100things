@@ -64,9 +64,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   });
 
   // カードの画像を取得
-  const { data, error } = await supabase.storage.from("images").list();
-
-  console.log(data);
+  const { data, error } = await supabase.storage.from("coverimages").list();
 
   // const convertedData = data?.map(() => {
   //   return { data: data, error: error };
@@ -98,11 +96,9 @@ const Home = ({ body }) => {
   //   return object.TodoID;
   // });
 
-  const ImageURLArray = data.map((data) => {
+  const ImageURLArray = data.map((data: any) => {
     return data.name;
   });
-
-  console.log(ImageURLArray);
 
   const router = useRouter();
 
@@ -138,46 +134,47 @@ const Home = ({ body }) => {
     if (url.length !== 0) {
       return (
         process.env.NEXT_PUBLIC_SUPABASE_URL +
-        "/storage/v1/object/public/images/" +
+        "/storage/v1/object/public/coverimages/" +
         url
       );
     } else {
       return (
         process.env.NEXT_PUBLIC_SUPABASE_URL +
-        "/storage/v1/object/public/images/404.png"
+        "/storage/v1/object/public/coverimages/404.png"
       );
     }
   };
+
   //
-  const [inputTodo, setInputTodo] = useState("");
+  // const [inputTodo, setInputTodo] = useState("");
 
-  // Submitクリックで発火
-  const onClickSubmit = async () => {
-    await todoClient.$post({
-      body: {
-        TodoName: inputTodo,
-        Description: "",
-        Location: "",
-        Status: "Undone",
-        // CompleteDate: "1970-01-01",
-      },
-    });
+  // // Submitクリックで発火
+  // const onClickSubmit = async () => {
+  //   await todoClient.$post({
+  //     body: {
+  //       TodoName: inputTodo,
+  //       Description: "",
+  //       Location: "",
+  //       Status: "Undone",
+  //       // CompleteDate: "1970-01-01",
+  //     },
+  //   });
 
-    setInputTodo("");
-    router.push("/todos");
-  };
+  //   setInputTodo("");
+  //   router.push("/todos");
+  // };
 
   return (
     <>
       <Layout>
-        <Center mt={20} mb={20}>
-          <Stack>
-            <Heading mb={5}>
+        <Center mt={[4, 6, 12, 16, 20]} mb={[10, 10, 10, 10, 10]}>
+          <Stack mb={[1, 2, 3, 4, 5]}>
+            <Heading size={["sm", "md", "lg", "xl", "2xl"]}>
               <Highlight
                 query={"100 Things"}
                 styles={{ px: "2", py: "1", rounded: "full", bg: "red.100" }}
               >
-                100 Things What To Do With You
+                100 Things What To Do With You !
               </Highlight>
             </Heading>
 
@@ -195,21 +192,33 @@ const Home = ({ body }) => {
           </Stack>
         </Center>
 
-        <Grid templateColumns="repeat(4, 1fr)" gap={4} m={10}>
-          {TodoArray.map((todo: Todo) => {
-            return (
-              <GridItem key={todo.TodoID}>
-                <TodoCard
-                  TodoName={todo.TodoName}
-                  Location={todo.Location}
-                  Key={todo.TodoID}
-                  Tags={SearchTag(todo.TodoID!)}
-                  CardImage={SearchImageURL(todo.TodoID!)}
-                />
-              </GridItem>
-            );
-          })}
-        </Grid>
+        <Center>
+          <Grid
+            templateColumns={[
+              "repeat(1, 1fr)",
+              "repeat(1, 1fr)",
+              "repeat(2, 1fr)",
+              "repeat(3, 1fr)",
+              "repeat(4, 1fr)",
+            ]}
+            gap={[20, 14, 10, 4, 6]}
+            m={[1, 10, 10, 4, 10]}
+          >
+            {TodoArray.map((todo: Todo) => {
+              return (
+                <GridItem key={todo.TodoID}>
+                  <TodoCard
+                    TodoName={`#${todo.TodoID} ${todo.TodoName}`}
+                    Location={todo.Location}
+                    Key={todo.TodoID}
+                    Tags={SearchTag(todo.TodoID!)}
+                    CardImage={SearchImageURL(todo.TodoID!)}
+                  />
+                </GridItem>
+              );
+            })}
+          </Grid>
+        </Center>
       </Layout>
     </>
   );

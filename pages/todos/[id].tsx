@@ -22,6 +22,7 @@ import {
   ButtonGroup,
   ButtonSpinner,
   FormControl,
+  useRadioGroup,
 } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
 import { supabase } from "../../libs/supabase";
@@ -34,11 +35,12 @@ import {
   TagName,
   Todo_Comment,
   Comment,
+  Profile,
 } from "../../aspida_api/@types";
 import prisma from "../../libs/prisma";
 import Layout from "../../components/Layout";
-import Carousel from "../carousel";
-import { useEffect, useState } from "react";
+import Carousel from "../../components/Carousel";
+import { use, useContext, useEffect, useState } from "react";
 import {
   commentClient,
   todoClient,
@@ -47,6 +49,8 @@ import {
 import { tagClient } from "../../utils/axiosInstancesServerside";
 import { todoTagClient } from "../../utils/axiosInstancesServerside";
 import { BiTargetLock } from "react-icons/bi";
+import { SessionContext } from "../_app";
+import { profileClient } from "../../utils/axiosInstancesServerside";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   // 変数
@@ -105,6 +109,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
       CommentID: result.id,
       CommentText: result.comment_text,
       CommentAuthor: result.comment_author,
+      CommentAvatar: result.comment_avatar,
     };
   });
 
@@ -125,6 +130,25 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
       };
     });
 
+  // ユーザー情報の取得
+  const user = await prisma.profiles.findMany({});
+
+  const convertedUser = user.map((result) => {
+    return {
+      ProfileID: result.id,
+      UpdatedAt: makeSerializable(result.updated_at),
+      UserName: result.username,
+      FullName: result.full_name,
+      AvatarURL: result.avatar_url,
+      WebSite: result.website,
+    };
+  });
+
+  // 画像の取得
+  const { data, error } = await supabase.storage
+    .from("images")
+    .list(String(ID));
+
   return {
     props: {
       body: {
@@ -134,6 +158,8 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
         convertedCommentResponse,
         convertedIntermediateCommentTableResponse,
         publicUrl,
+        convertedUser,
+        ImageURLs: data,
       },
     },
   };
@@ -142,6 +168,27 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
 const TodoDetailForm = ({ body }: any) => {
   const router = useRouter();
   const id = Number(router.query.id);
+
+  const LoginUserID = useContext(SessionContext);
+
+  const Users = body.convertedUser;
+  const user = Users.filter((row: Profile) => row.ProfileID === LoginUserID)[0];
+
+  const session = useContext(SessionContext);
+
+  console.log(body.ImageURLs);
+
+  const IMAGE_URL_DOMAIN =
+    process.env.NEXT_PUBLIC_SUPABASE_URL + "/storage/v1/object/public/images";
+
+  const CarouselCards = body.ImageURLs?.map((image: any) => {
+    return {
+      title: "",
+      text: "",
+      image: IMAGE_URL_DOMAIN + `/${id}/${image.name}`,
+    };
+  });
+  console.log(CarouselCards);
 
   // Todoテーブル
   const TodoArray = body.convertedTodoResponse;
@@ -187,6 +234,9 @@ const TodoDetailForm = ({ body }: any) => {
           //一致すればそのIDを持つCommentAuthorを配列の要素に追加する
           intermediateCommentTableObject.CommentAuthor =
             commentArrayObject.CommentAuthor;
+          //一致すればそのIDを持つCommentAvatarを配列の要素に追加する
+          intermediateCommentTableObject.CommentAvatar =
+            commentArrayObject.CommentAvatar;
         }
       });
       return intermediateCommentTableObject;
@@ -194,11 +244,9 @@ const TodoDetailForm = ({ body }: any) => {
   );
 
   // 日付のフォーマット変更
-  // if (TodoArray.CompleteDate) {
+
   const Date = TodoArray.CompleteDate && TodoArray.CompleteDate;
   const convertedCompleteDate = Date && Date.substr(0, 10);
-  // return convertedCompleteDate
-  // }
 
   // あるIDのタグ名のみ抜き出す
   const SearchTag = (todoID: number, data: Array<Tag>) => {
@@ -210,12 +258,14 @@ const TodoDetailForm = ({ body }: any) => {
   };
 
   // あるIDのコメントのみ抜き出す
-  const SearchComment = (todoID: number, data: Array<Tag>) => {
-    return data
-      .filter((object: any) => todoID === object.TodoID)
-      .map((row: any) => {
-        return row.CommentText;
-      });
+  const SearchComment = (todoID: number, data: Array<Comment>) => {
+    const filteredData = data.filter((object: any) => todoID === object.TodoID);
+    const mappedData = filteredData.map((row: any) => ({
+      CommentAuthor: row.CommentAuthor,
+      CommentText: row.CommentText,
+      CommentAvatar: row.CommentAvatar,
+    }));
+    return mappedData;
   };
 
   // Description--------------------------------------------------------
@@ -390,11 +440,11 @@ const TodoDetailForm = ({ body }: any) => {
     }
 
     // 入力されたタグがTodoになければTagテーブルに送信
-    // if (!newTags.includes(inputData)) {
     const submit = await commentClient.$post({
       body: {
         CommentText: inputData,
-        CommentAuthor: "Minami",
+        CommentAuthor: user[0].FullName,
+        CommentAvatar: user[0].AvatarURL,
       },
     });
 
@@ -407,7 +457,14 @@ const TodoDetailForm = ({ body }: any) => {
     });
 
     // 投稿後、タグの再レンダリング
-    setCommentFromServer([...CommentFromServer, inputData]);
+    setCommentFromServer([
+      ...CommentFromServer,
+      {
+        CommentText: inputData,
+        CommentAuthor: user[0].FullName,
+        CommentAvatar: user[0].AvatarURL,
+      },
+    ]);
 
     // 送信後、入力フォームを空に戻す
     setInputComment("");
@@ -429,7 +486,9 @@ const TodoDetailForm = ({ body }: any) => {
                 {TodoArray.TodoName}
               </Heading>
               <Spacer />
-              <Button onClick={() => router.push("/todos")}>←Back</Button>
+              <Button onClick={() => router.push("/todos")} variant="ghost">
+                ←Back
+              </Button>
             </Flex>
             <Box mb="3">
               {/* <Image
@@ -439,12 +498,15 @@ const TodoDetailForm = ({ body }: any) => {
                 height="300px"
                 objectFit="cover"
               /> */}
-              <Carousel />
+              <Carousel cards={CarouselCards} />
             </Box>
             <Editable
               value={inputDescription}
               onSubmit={() => onSubmitDescription(inputDescription)}
-              placeholder="クリックで編集"
+              placeholder={
+                session === undefined ? "ログインして編集" : "クリックで編集"
+              }
+              isDisabled={session === undefined ? true : false}
             >
               <EditablePreview />
               <EditableTextarea
@@ -465,16 +527,22 @@ const TodoDetailForm = ({ body }: any) => {
                 {TagFromServer.map((tag: string) => {
                   return <ChakraTag key={tag}>{tag}</ChakraTag>;
                 })}
-                <Editable
-                  value={inputTag}
-                  onSubmit={() => onSubmitTag(inputTag)}
-                >
-                  <EditablePreview />
-                  <EditableInput
-                    onChange={(e) => setInputTag(e.target.value)}
-                    onKeyDown={(e) => onEnterDown(e)}
-                  />
-                </Editable>
+                {session !== undefined ? (
+                  <Editable
+                    value={inputTag}
+                    onSubmit={() => onSubmitTag(inputTag)}
+                    isDisabled={session === undefined ? true : false}
+                    onClick={() => setInputTag("")}
+                  >
+                    <EditablePreview />
+                    <EditableInput
+                      onChange={(e) => setInputTag(e.target.value)}
+                      onKeyDown={(e) => onEnterDown(e)}
+                    />
+                  </Editable>
+                ) : (
+                  <Box>ログインして編集</Box>
+                )}
               </HStack>
             </Box>
           </Box>
@@ -493,7 +561,12 @@ const TodoDetailForm = ({ body }: any) => {
                     <Editable
                       defaultValue={inputCompleteDate}
                       onSubmit={() => onSubmitCompleteDate(inputCompleteDate)}
-                      placeholder={"クリックで編集"}
+                      placeholder={
+                        session === undefined
+                          ? "ログインして編集"
+                          : "クリックで編集"
+                      }
+                      isDisabled={session === undefined ? true : false}
                     >
                       <EditablePreview />
                       <EditableInput
@@ -514,7 +587,12 @@ const TodoDetailForm = ({ body }: any) => {
                     <Editable
                       value={inputLocation}
                       onSubmit={() => onSubmitLocation(inputLocation)}
-                      placeholder="クリックで編集"
+                      placeholder={
+                        session === undefined
+                          ? "ログインして編集"
+                          : "クリックで編集"
+                      }
+                      isDisabled={session === undefined ? true : false}
                     >
                       <EditablePreview width="200" />
                       <EditableInput
@@ -536,6 +614,7 @@ const TodoDetailForm = ({ body }: any) => {
                     <Select
                       defaultValue={inputStatus}
                       onChange={(e) => onSubmitStatus(e.target.value as Status)}
+                      disabled={session === undefined ? true : false}
                     >
                       <option value="Undone">Undone</option>
                       <option value="Planning">Planning</option>
@@ -556,15 +635,15 @@ const TodoDetailForm = ({ body }: any) => {
             </Box>
 
             {CommentFromServer.length !== 0 ? (
-              CommentFromServer.map((comment: string, i: number) => {
+              CommentFromServer.map((comment: any, i: number) => {
                 return (
                   <Box mb="5" key={i}>
                     <HStack>
                       <Avatar
-                        name="Dan Abrahmov"
-                        src="https://bit.ly/dan-abramov"
+                        name={comment.CommentAuthor}
+                        src={comment.CommentAvatar}
                       />
-                      <Text fontSize="sm">{comment}</Text>
+                      <Text fontSize="sm">{comment.CommentText}</Text>
                     </HStack>
                   </Box>
                 );
@@ -579,21 +658,29 @@ const TodoDetailForm = ({ body }: any) => {
               <Box mb="5">
                 <HStack>
                   <Avatar
-                    name="Dan Abrahmov"
-                    src="https://bit.ly/dan-abramov"
+                    name={user ? user.FullName : ""}
+                    src={user ? user.AvatarURL : ""}
                   />
                   <Textarea
                     height="100px"
                     fontSize="sm"
                     value={inputComment}
                     onChange={(e) => setInputComment(e.target.value)}
+                    disabled={session === undefined ? true : false}
+                    placeholder={
+                      session === undefined ? "ログインしてコメント" : ""
+                    }
                   />
                 </HStack>
               </Box>
 
               <Flex>
                 <Spacer />
-                <Button onClick={() => onSubmitComment(inputComment)}>
+                <Button
+                  onClick={() => onSubmitComment(inputComment)}
+                  disabled={session === undefined ? true : false}
+                  colorScheme="purple"
+                >
                   Submit Comment
                 </Button>
               </Flex>

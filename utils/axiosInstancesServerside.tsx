@@ -6,6 +6,7 @@ import tagApi from "../aspida_api/tags/$api";
 import commentApi from "../aspida_api/comments/$api";
 import todo_commentApi from "../aspida_api/todos_comments/$api";
 import todo_tagApi from "../aspida_api/todos_tags/$api";
+import profileApi from "../aspida_api/profiles/$api";
 
 // baseURLの指定
 let baseURL;
@@ -76,6 +77,19 @@ export const todoCommentClient = todo_commentApi(
 
 // Todo-Tag
 export const todoTagClient = todo_tagApi(
+  aspida(
+    axios.create({
+      responseType: "json",
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false,
+      }),
+      baseURL: baseURL,
+    })
+  )
+);
+
+// Profile
+export const profileClient = profileApi(
   aspida(
     axios.create({
       responseType: "json",

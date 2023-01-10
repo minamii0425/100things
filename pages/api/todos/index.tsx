@@ -30,6 +30,7 @@ const TodoHandler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const result = await prisma.todos.create({
       data: {
+        id: TodoID,
         todo_name: TodoName,
         complete_date: new Date(CompleteDate),
         location: Location,

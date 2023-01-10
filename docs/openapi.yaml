@@ -19,6 +19,8 @@ tags:
     description: Todoとコメントの中間テーブル関連
   - name: Todos-タグ
     description: Todoとタグの中間テーブル関連
+  - name: Profile
+    description: セッション管理
 paths:
   # Todo:
   /todos:
@@ -1451,6 +1453,292 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiErrResponse"
+  /profiles:
+    get:
+      tags:
+        - Profiles
+      summary: "ユーザー情報全件取得"
+      description: "登録されているすべてのユーザー情報を取得する。"
+      operationId: getProfiles
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profiles"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    post:
+      tags:
+        - Profiles
+      summary: "ユーザーの登録"
+      description: "ユーザーの登録を行う。"
+      operationId: postProfile
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Profile"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Profiles
+      summary: "Profileの複数削除"
+      description: "プロファイルの複数削除を行う。"
+      operationId: deleteProfiles
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileIDs"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+  /profiles/{id}:
+    get:
+      tags:
+        - Profiles
+      summary: "ユーザーの一件取得"
+      description: "あるIDを持つユーザーを取得する。"
+      operationId: getProfileWithID
+      parameters:
+        - in: path
+          name: ProfileID
+          schema:
+            $ref: "#/components/schemas/ProfileID"
+          required: true
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    delete:
+      tags:
+        - Profiles
+      summary: "ユーザーの削除"
+      description: "あるIDを持つユーザーの削除を行う。"
+      operationId: deleteProfileWithID
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: ProfileID
+          schema:
+            $ref: "#/components/schemas/ProfileID"
+          required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "401":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+    put:
+      tags:
+        - Profiles
+      summary: "ユーザーの更新"
+      description: "指定したIDを持つユーザーを更新する。"
+      operationId: putTodo_Tag
+      parameters:
+        - name: X-Api-Key
+          in: header
+          description: リクエストユーザーのAPIキー
+          schema:
+            $ref: "#/components/schemas/XApiKey"
+        - name: Token
+          in: cookie
+          description: One Time Token
+          schema:
+            $ref: "#/components/schemas/Token"
+        - in: query
+          name: ProfileID
+          schema:
+            $ref: "#/components/schemas/ProfileID"
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Profile"
+        required: true
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostResponseBody"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErrResponse"
 components:
   schemas:
     # 共通
@@ -1520,6 +1808,11 @@ components:
       description: コメントしたユーザー
       maxLength: 32
       example: Minami
+    CommentAvatar:
+      type: string
+      description: コメントしたユーザーのアバターのURL
+      maxLength: 1024
+      example: http://xxxxxx.xxxxx/xxxxxxxxxxxxx
     # タグ
     TagID:
       type: number
@@ -1553,7 +1846,33 @@ components:
       description: Todos-タグテーブルのID(複数)
       items:
         $ref: "#/components/schemas/Todo_TagID"
-      example: 1
+        example: 1
+    # Profiles
+    ProfileID:
+      type: string
+      description: ユーザーのID
+      example: "abcdefghijklmnopqrstu"
+    ProfileIDs:
+      type: array
+      description: ユーザーのID(複数)
+      items:
+        $ref: "#/components/schemas/ProfileID"
+    UpdatedAt:
+      type: string
+      description: ユーザーを更新した日時
+      format: date
+    UserName:
+      type: string
+      description: ユーザー名
+    FullName:
+      type: string
+      description: フルネーム
+    AvatarURL:
+      type: string
+      description: アバターのURL
+    WebSite:
+      type: string
+      description: サイトURL
     # リクエストボディ
     Todo:
       type: object
@@ -1590,6 +1909,8 @@ components:
           $ref: "#/components/schemas/CommentText"
         CommentAuthor:
           $ref: "#/components/schemas/CommentAuthor"
+        CommentAvatar:
+          $ref: "#/components/schemas/CommentAvatar"
     Comments:
       type: array
       description: コメント情報(複数)
@@ -1638,6 +1959,27 @@ components:
       description: Todo-タグ(複数)
       items:
         $ref: "#/components/schemas/Todo_Tag"
+    Profile:
+      type: object
+      description: ユーザー情報
+      properties:
+        ProfileID:
+          $ref: "#/components/schemas/ProfileID"
+        UpdatedAt:
+          $ref: "#/components/schemas/UpdatedAt"
+        UserName:
+          $ref: "#/components/schemas/UserName"
+        FullName:
+          $ref: "#/components/schemas/FullName"
+        AvatarURL:
+          $ref: "#/components/schemas/AvatarURL"
+        WebSite:
+          $ref: "#/components/schemas/WebSite"
+    Profiles:
+      type: array
+      description: ユーザー情報(複数)
+      items:
+        $ref: "#/components/schemas/Profile"
     # レスポンスボディ
     PostResponseBody:
       type: object

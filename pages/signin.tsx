@@ -6,36 +6,24 @@ import {
   Input,
   Stack,
 } from "@chakra-ui/react";
-import { useState } from "react";
-// import Layout from "../components/Layout";
+import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../libs/supabase";
 import { useToast } from "@chakra-ui/react";
-import { GetServerSideProps } from "next";
-import prisma from "../libs/prisma";
 import Layout from "../components/Layout";
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const user = await supabase.from("profiles").select("*");
+import { useRouter } from "next/router";
 
-  return {
-    props: { user: user },
-  };
-};
-
-const SignUp = (user: any, comment: any) => {
-  console.log(user.user.data);
-  console.log(comment);
+const SignIn = () => {
   const toast = useToast();
-  // 変数の設定
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConf, setPasswordConf] = useState("");
 
-  // ユーザーの登録
-  const onClickSubmit = async (e: any) => {
+  // サインイン
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
     });
@@ -56,7 +44,7 @@ const SignUp = (user: any, comment: any) => {
         duration: 9000,
         isClosable: true,
       });
-
+      router.push("/");
       setEmail("");
       setPassword("");
     }
@@ -66,7 +54,7 @@ const SignUp = (user: any, comment: any) => {
     <>
       <Layout>
         <Stack>
-          <FormControl>
+          <FormControl onSubmit={onSubmit}>
             <Box>
               <FormLabel>メールアドレス</FormLabel>
               <Input
@@ -86,17 +74,8 @@ const SignUp = (user: any, comment: any) => {
               />
             </Box>
             <Box>
-              <FormLabel>パスワード（確認）</FormLabel>
-              <Input
-                type="password"
-                required
-                value={passwordConf}
-                onChange={(e) => setPasswordConf(e.target.value)}
-              />
-            </Box>
-            <Box>
-              <Button type="submit" onClick={onClickSubmit}>
-                サインアップ
+              <Button type="submit" onClick={onSubmit}>
+                ログイン
               </Button>
             </Box>
           </FormControl>
@@ -106,4 +85,4 @@ const SignUp = (user: any, comment: any) => {
   );
 };
 
-export default SignUp;
+export default SignIn;
