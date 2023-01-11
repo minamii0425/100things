@@ -11,15 +11,18 @@ import profileApi from "../aspida_api/profiles/$api";
 // baseURLの指定
 let baseURL;
 // npm run dev環境
-if (process.env.NODE_ENV === "development") {
-  baseURL = "http://localhost:3011/api";
+// if (process.env.NODE_ENV === "development") {
+//   baseURL = "http://localhost:3011/api";
 
-  // npm run start環境
-} else if (process.env.NODE_ENV === "production") {
-  baseURL = "http://localhost:3011/api";
+//   // npm run start環境
+// } else if (process.env.NODE_ENV === "production") {
+//   baseURL = "http://localhost:3011/api";
 
-  // vercel production環境
-} else if (process.env.NEXT_PUBLIC_NODE_ENV === "vercel_production") {
+// ローカル環境
+baseURL = "http://localhost:3011/api";
+
+// vercel production環境
+if (process.env.NEXT_PUBLIC_NODE_ENV === "vercel_production") {
   baseURL = process.env.NEXT_PUBLIC_BASE_URL + "/api";
 }
 
