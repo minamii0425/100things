@@ -166,6 +166,8 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
 };
 
 const TodoDetailForm = ({ body }: any) => {
+  console.log(process.env.NEXT_PUBLIC_NODE_ENV);
+
   const router = useRouter();
   const id = Number(router.query.id);
 
