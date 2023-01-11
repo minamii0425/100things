@@ -193,13 +193,14 @@ const Home = ({ body }: any) => {
           <Grid
             templateColumns={[
               "repeat(1, 1fr)",
-              "repeat(1, 1fr)",
+              "repeat(2, 1fr)",
               "repeat(2, 1fr)",
               "repeat(3, 1fr)",
               "repeat(4, 1fr)",
             ]}
-            gap={[20, 14, 10, 4, 6]}
-            m={[1, 10, 10, 4, 10]}
+            gap={[8, 3, 10, 10, 6]}
+            marginX={[8, 8, 10, 10, 10]}
+            mb={10}
           >
             {TodoArray.map((todo: Todo) => {
               return (
