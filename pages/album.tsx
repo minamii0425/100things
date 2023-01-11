@@ -56,7 +56,7 @@ export const getServerSideProps = async () => {
   };
 };
 
-const AlbumPage = ({ body }) => {
+const AlbumPage = ({ body }: any) => {
   const TodoArray = body.convertedTodoResponse;
 
   const TodoList = TodoArray.map((todo: Todo) => {
@@ -93,9 +93,10 @@ const AlbumPage = ({ body }) => {
                     <GridItem>
                       <Image
                         src={
-                          process.env.NEXT_PUBLIC_SUPABASE_URL +
-                          "/storage/v1/object/public/images/" +
-                          image
+                          process.env.NEXT_PUBLIC_SUPABASE_URL! +
+                          process.env.NEXT_PUBLIC_SUPABASE_SUBDOMAIN! +
+                          process.env.NEXT_PUBLIC_SUPABASE_IMAGE_BUCKET +
+                          `/${image}`
                         }
                         alt={""}
                         width={300}

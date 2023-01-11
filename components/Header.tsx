@@ -92,7 +92,7 @@ const Header = () => {
       duration: 9000,
       isClosable: true,
     });
-    router.push("/");
+    router.reload();
   };
 
   return (

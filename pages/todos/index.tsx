@@ -82,11 +82,8 @@ export const getServerSideProps: GetServerSideProps = async () => {
   };
 };
 
-const Home = ({ body }) => {
+const Home = ({ body }: any) => {
   const TodoArray = body.convertedTodoResponse;
-
-  TodoArray.sort((a, b) => a.id - b.id);
-  console.log(TodoArray);
 
   const IntermediateTableArray = body.convertedIntermediateTableResponse;
   const TagArray = body.convertedTagResponse;

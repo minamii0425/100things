@@ -54,7 +54,7 @@ type UploadStorageArgs = {
 //   pathname: string | null;
 // };
 
-/**
+/**s
  *
  * @returns
  */
@@ -93,7 +93,7 @@ const ImageUploader = (props: ImageUploaderProps) => {
         setIsLoading(true);
         // サーバーに何枚の写真があるかを確認
         const { data, error } = await supabase.storage
-          .from("images")
+          .from(process.env.NEXT_PUBLIC_SUPABASE_IMAGE_BUCKET!)
           .list(selectedValue);
         const convertedData = data?.map((data) => data.name);
 

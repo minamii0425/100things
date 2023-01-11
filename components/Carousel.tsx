@@ -117,8 +117,10 @@ export default function Carousel(props: CarouselProps) {
       ) : (
         <Image
           src={
-            process.env.NEXT_PUBLIC_SUPABASE_URL +
-            "/storage/v1/object/public/coverimages/404.png"
+            process.env.NEXT_PUBLIC_SUPABASE_URL! +
+            process.env.NEXT_PUBLIC_SUPABASE_SUBDOMAIN! +
+            process.env.NEXT_PUBLIC_SUPABASE_COVERIMAGE_BUCKET +
+            "/404.png"
           }
           alt="No Image"
           width="100%"

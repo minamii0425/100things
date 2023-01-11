@@ -13,7 +13,7 @@ import Layout from "../components/Layout";
 export default function WithBackgroundImage() {
   return (
     <>
-      <Layout></Layout>
+      <Layout>あ</Layout>
     </>
   );
 }

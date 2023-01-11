@@ -172,11 +172,10 @@ const TodoDetailForm = ({ body }: any) => {
   const LoginUserID = useContext(SessionContext);
 
   const Users = body.convertedUser;
+
   const user = Users.filter((row: Profile) => row.ProfileID === LoginUserID)[0];
 
   const session = useContext(SessionContext);
-
-  console.log(body.ImageURLs);
 
   const IMAGE_URL_DOMAIN =
     process.env.NEXT_PUBLIC_SUPABASE_URL + "/storage/v1/object/public/images";
@@ -188,7 +187,6 @@ const TodoDetailForm = ({ body }: any) => {
       image: IMAGE_URL_DOMAIN + `/${id}/${image.name}`,
     };
   });
-  console.log(CarouselCards);
 
   // Todoテーブル
   const TodoArray = body.convertedTodoResponse;
@@ -443,8 +441,8 @@ const TodoDetailForm = ({ body }: any) => {
     const submit = await commentClient.$post({
       body: {
         CommentText: inputData,
-        CommentAuthor: user[0].FullName,
-        CommentAvatar: user[0].AvatarURL,
+        CommentAuthor: user.FullName,
+        CommentAvatar: user.AvatarURL,
       },
     });
 
@@ -461,8 +459,8 @@ const TodoDetailForm = ({ body }: any) => {
       ...CommentFromServer,
       {
         CommentText: inputData,
-        CommentAuthor: user[0].FullName,
-        CommentAvatar: user[0].AvatarURL,
+        CommentAuthor: user.FullName,
+        CommentAvatar: user.AvatarURL,
       },
     ]);
 

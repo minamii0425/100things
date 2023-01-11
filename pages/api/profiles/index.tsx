@@ -25,12 +25,13 @@ const ProfilesHandler = async (req: NextApiRequest, res: NextApiResponse) => {
   } else if (req.method === "POST") {
     console.log("ポスト");
 
-    const { CommentAuthor, CommentText } = req.body;
+    const { CommentAuthor, CommentText, CommentAvatar } = req.body;
 
     const result = await prisma.comments.create({
       data: {
         comment_author: CommentAuthor,
         comment_text: CommentText,
+        comment_avatar: CommentAvatar,
       },
     });
     res.json(result.id);
