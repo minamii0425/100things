@@ -10,15 +10,23 @@ import {
   Heading,
   Stack,
   Text,
-  Tag,
-  TagLabel,
-  TagLeftIcon,
-  TagRightIcon,
-  TagCloseButton,
+  Tag as ChakraTag,
   HStack,
 } from "@chakra-ui/react";
-import { Location, TodoID, TodoName } from "../aspida_api/@types";
+import {
+  Location,
+  Tag,
+  TagName,
+  Todo,
+  TodoID,
+  TodoName,
+  Todo_Tag,
+} from "../aspida_api/@types";
 import { useRouter } from "next/router";
+import { useState } from "react";
+import { GetServerSideProps } from "next";
+import { makeSerializable } from "../utils/util";
+import { supabase } from "../libs/supabase";
 
 export interface TodoCardProps {
   Key?: TodoID;
@@ -47,7 +55,7 @@ const TodoCard = (props: TodoCardProps) => {
 
             <HStack>
               {props.Tags.map((tag: string) => {
-                return <Tag key={tag}>{tag}</Tag>;
+                return <ChakraTag key={tag}>{tag}</ChakraTag>;
               })}
             </HStack>
             <Text color="gray.600" fontSize="sm">

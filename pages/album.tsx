@@ -188,6 +188,7 @@ const AlbumPage = ({ body }: any) => {
             .from(bucketName)
             .upload(pathName, file);
 
+          console.log(imageURLs);
           setImageURLs([...imageURLs, pathName]);
 
           if (error) throw error;

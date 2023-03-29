@@ -6,7 +6,7 @@ import styles from "../styles/Home.module.css";
 import prisma from "../../libs/prisma";
 import { makeSerializable } from "../../utils/util";
 import { Context } from "../../types/context";
-import { Tag, Todo, TodoID, Todo_Tag } from "../../aspida_api/@types";
+import { Todo, TodoID, Todo_Tag, Tag, TagName } from "../../aspida_api/@types";
 import {
   Box,
   Center,
@@ -26,7 +26,7 @@ import {
 import { supabase } from "../../libs/supabase";
 import Layout from "../../components/Layout";
 import { useEffect, useState } from "react";
-import { todoClient } from "../../utils/axiosInstancesServerside";
+import { tagClient, todoClient } from "../../utils/axiosInstancesServerside";
 import { useRouter } from "next/router";
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -83,8 +83,6 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 const Home = ({ body }: any) => {
-  const TodoArray = body.convertedTodoResponse;
-
   const IntermediateTableArray = body.convertedIntermediateTableResponse;
   const TagArray = body.convertedTagResponse;
   const data = body.data;
@@ -96,8 +94,6 @@ const Home = ({ body }: any) => {
   const ImageURLArray = data.map((data: any) => {
     return data.name;
   });
-
-  const router = useRouter();
 
   // TodoIDごとにタグを配列に
   const WithTagNameArray = IntermediateTableArray.map(
@@ -161,6 +157,34 @@ const Home = ({ body }: any) => {
   //   router.push("/todos");
   // };
 
+  // console.log(
+  //   TodoArray.sort((a: Todo, b: Todo) => {
+  //     return a.TodoID! < b.TodoID! ? -1 : 1;
+  //   })
+  // );
+
+  const [TodoArray, setTodoArray] = useState(body.convertedTodoResponse);
+
+  // クリックしたタグを持つTodoを抽出する関数
+  const SearchTodoByTagName = (tagName: TagName) => {
+    // タグ名からタグIDを検索
+    const TagID = body.convertedTagResponse.find(
+      (tag: Tag) => tag.TagName === tagName
+    ).TagID;
+
+    // そのタグIDを持つTodoIDを抽出
+    const FilteredTodoID = body.convertedIntermediateTableResponse
+      .filter((Todo: Todo_Tag) => Todo.TagID === TagID)
+      .map((row: Todo_Tag) => row.TodoID);
+
+    // TodoIDでTodoを抽出
+    const FilteredTodo = FilteredTodoID.map((TodoID: TodoID) =>
+      body.convertedTodoResponse.filter((row: Todo) => row.TodoID === TodoID)
+    ).flat();
+
+    setTodoArray(FilteredTodo);
+  };
+
   return (
     <>
       <Layout>
@@ -189,6 +213,18 @@ const Home = ({ body }: any) => {
           </Stack>
         </Center>
 
+        <Center mb={10}>
+          {body.convertedTagResponse.map((tag: any) => {
+            return (
+              <ChakraTag
+                onClick={() => SearchTodoByTagName(tag.TagName)}
+                mr={2}
+              >
+                {tag.TagName}
+              </ChakraTag>
+            );
+          })}
+        </Center>
         <Center>
           <Grid
             templateColumns={[
@@ -202,19 +238,25 @@ const Home = ({ body }: any) => {
             marginX={[8, 8, 10, 10, 10]}
             mb={10}
           >
-            {TodoArray.map((todo: Todo) => {
-              return (
-                <GridItem key={todo.TodoID}>
-                  <TodoCard
-                    TodoName={`#${todo.TodoID} ${todo.TodoName}`}
-                    Location={todo.Location}
-                    Key={todo.TodoID}
-                    Tags={SearchTag(todo.TodoID!)}
-                    CardImage={SearchImageURL(todo.TodoID!)}
-                  />
-                </GridItem>
-              );
-            })}
+            {TodoArray.length !== 0 ? (
+              TodoArray.sort((a: Todo, b: Todo) => {
+                return a.TodoID! < b.TodoID! ? -1 : 1;
+              }).map((todo: Todo) => {
+                return (
+                  <GridItem key={todo.TodoID}>
+                    <TodoCard
+                      TodoName={`#${todo.TodoID} ${todo.TodoName}`}
+                      Location={todo.Location}
+                      Key={todo.TodoID}
+                      Tags={SearchTag(todo.TodoID!)}
+                      CardImage={SearchImageURL(todo.TodoID!)}
+                    />
+                  </GridItem>
+                );
+              })
+            ) : (
+              <div>No Data</div>
+            )}
           </Grid>
         </Center>
       </Layout>

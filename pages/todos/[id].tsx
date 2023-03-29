@@ -48,9 +48,7 @@ import {
 } from "../../utils/axiosInstancesServerside";
 import { tagClient } from "../../utils/axiosInstancesServerside";
 import { todoTagClient } from "../../utils/axiosInstancesServerside";
-import { BiTargetLock } from "react-icons/bi";
 import { SessionContext } from "../_app";
-import { profileClient } from "../../utils/axiosInstancesServerside";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   // 変数
@@ -166,8 +164,8 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
 };
 
 const TodoDetailForm = ({ body }: any) => {
-  console.log(process.env.NEXT_PUBLIC_NODE_ENV);
-  console.log(process.env.NODE_ENV);
+  // console.log(process.env.NEXT_PUBLIC_NODE_ENV);
+  // console.log(process.env.NODE_ENV);
 
   const router = useRouter();
   const id = Number(router.query.id);
@@ -301,6 +299,29 @@ const TodoDetailForm = ({ body }: any) => {
   const [TagFromServer, setTagFromServer] = useState(
     SearchTag(id, WithTagNameArray)
   );
+
+  const onClickTag = async (tag: TagName) => {
+    const tagInThisPage = await tagClient.$get({});
+
+    const All = await todoTagClient.$get({});
+
+    // クリックされたタグ名のID
+    const clickedTagID = tagInThisPage
+      .filter((row) => row.TagName === tag)
+      .map((row) => row.TagID);
+
+    // クリックされたタグ名を持つ
+    const clickedTodoTagID = All.filter(
+      (row) => row.TagID === clickedTagID[0] && row.TodoID === id
+    ).map((row) => row.Todo_TagID);
+
+    setTagFromServer(TagFromServer.filter((tagName) => tagName !== tag));
+
+    // クリックされたタグ名のIDを持つ要素を削除
+    await todoTagClient
+      ._id(clickedTodoTagID[0]!)
+      .$delete({ query: { Todo_TagID: clickedTodoTagID[0]! } });
+  };
 
   const onSubmitTag = async (inputData: TagName) => {
     // エラーハンドリング
@@ -525,8 +546,12 @@ const TodoDetailForm = ({ body }: any) => {
                 </Text>
               </Box>
               <HStack>
-                {TagFromServer.map((tag: string) => {
-                  return <ChakraTag key={tag}>{tag}</ChakraTag>;
+                {TagFromServer.map((tag: TagName) => {
+                  return (
+                    <ChakraTag key={tag} onClick={() => onClickTag(tag)}>
+                      {tag}
+                    </ChakraTag>
+                  );
                 })}
                 {session !== undefined ? (
                   <Editable

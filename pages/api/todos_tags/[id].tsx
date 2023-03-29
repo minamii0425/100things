@@ -30,10 +30,13 @@ const Todos_TagsHandlerWithID = async (
   // Delete：指定したIDを持つTodo-タグを削除
   else if (req.method === "DELETE") {
     const Todo_TagID = req.query.id;
+    console.log(Todo_TagID);
+    console.log("デリート");
 
     const result = await prisma.todos_Tags.deleteMany({
       where: {
-        todo_id: Number(Todo_TagID),
+        // todo_id: Number(Todo_TagID),
+        id: Number(Todo_TagID),
       },
     });
 

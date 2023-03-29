@@ -5,7 +5,7 @@ import prisma from "../../../libs/prisma";
 const Todo_TagHandler = async (req: NextApiRequest, res: NextApiResponse) => {
   // GET：全Todo-タグの取得
   if (req.method === "GET") {
-    console.log("ゲット");
+    console.log("ゲット！！");
 
     const results = await prisma.todos_Tags.findMany({});
 
