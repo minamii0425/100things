@@ -27,9 +27,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { BiLeftArrow } from "react-icons/bi";
+
 import { Todo, TodoName } from "../aspida_api/@types";
-import ImageUploader from "../components/ImageUploader";
+
 import Layout from "../components/Layout";
 import prisma from "../libs/prisma";
 import { supabase } from "../libs/supabase";
