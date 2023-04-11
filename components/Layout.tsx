@@ -1,13 +1,10 @@
 import { ReactNode, useContext } from "react";
 import { SessionContext } from "../pages/_app";
-import Header from "./Header";
+import Header from "../pages/Header";
 
 export interface LayoutProps {
   children: ReactNode;
-}
-
-export interface LayoutProps {
-  children: ReactNode;
+  username?: string;
 }
 
 const Layout = (props: LayoutProps) => {

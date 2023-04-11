@@ -1,55 +1,62 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../libs/prisma";
+import { supabase } from "../../../libs/supabase";
 
 const TagHandlerWithID = async (req: NextApiRequest, res: NextApiResponse) => {
-  // GET：指定したIDを持つタグを取得
-  if (req.method === "GET") {
-    const TagID = req.query.id;
-    console.log(`TodoID：${TagID}`);
+    // 認証のない場合は401エラー
+    // const { data, error } = await supabase.auth.getSession();
+    // if (!data.session) {
+    //     return res.status(401).json({ error: "Unauthorized" });
+    // }
 
-    const result = await prisma.tags.findUnique({
-      where: {
-        id: Number(TagID),
-      },
-    });
+    // GET：指定したIDを持つタグを取得
+    if (req.method === "GET") {
+        const TagID = req.query.id;
+        console.log(`TodoID：${TagID}`);
 
-    const convertedResult = {
-      TagID: result?.id,
-      TagName: result?.tag_name,
-    };
+        const result = await prisma.tags.findUnique({
+            where: {
+                id: Number(TagID),
+            },
+        });
 
-    res.json(convertedResult);
-  }
+        const convertedResult = {
+            TagID: result?.id,
+            TagName: result?.tag_name,
+        };
 
-  // Delete：指定したIDを持つTodoを削除
-  else if (req.method === "DELETE") {
-    const TagID = req.query.id;
+        res.json(convertedResult);
+    }
 
-    const result = await prisma.tags.delete({
-      where: {
-        id: Number(TagID),
-      },
-    });
+    // Delete：指定したIDを持つTodoを削除
+    else if (req.method === "DELETE") {
+        const TagID = req.query.id;
 
-    console.log(result);
-  }
+        const result = await prisma.tags.delete({
+            where: {
+                id: Number(TagID),
+            },
+        });
 
-  // PUT：指定したIDを持つTodoを更新
-  else if (req.method === "PUT") {
-    const TagID = req.query.id;
+        console.log(result);
+    }
 
-    const { TagName } = req.body;
+    // PUT：指定したIDを持つTodoを更新
+    else if (req.method === "PUT") {
+        const TagID = req.query.id;
 
-    const result = await prisma.tags.update({
-      where: {
-        id: Number(TagID),
-      },
-      data: {
-        tag_name: TagName,
-      },
-    });
-    res.json(result);
-  }
+        const { TagName } = req.body;
+
+        const result = await prisma.tags.update({
+            where: {
+                id: Number(TagID),
+            },
+            data: {
+                tag_name: TagName,
+            },
+        });
+        res.json(result);
+    }
 };
 
 export default TagHandlerWithID;

@@ -1,56 +1,63 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../libs/prisma";
+import { supabase } from "../../../libs/supabase";
 
 // /todos
 const Todo_CommentHandler = async (
-  req: NextApiRequest,
-  res: NextApiResponse
+    req: NextApiRequest,
+    res: NextApiResponse
 ) => {
-  // GET：全Todo-コメントの取得
-  if (req.method === "GET") {
-    console.log("ゲット");
+    // 認証のない場合は401エラー
+    // const { data, error } = await supabase.auth.getSession();
+    // if (!data.session) {
+    //     return res.status(401).json({ error: "Unauthorized" });
+    // }
 
-    const results = await prisma.todos_Comments.findMany({});
+    // GET：全Todo-コメントの取得
+    if (req.method === "GET") {
+        console.log("ゲット");
 
-    const convertedResult = results.map((result: any) => {
-      return {
-        Todo_CommentID: result.id,
-        TodoID: result.todo_id,
-        CommentID: result.comment_id,
-      };
-    });
-    res.json(convertedResult);
+        const results = await prisma.todos_Comments.findMany({});
 
-    // POST：新規Todo-コメントの登録
-  } else if (req.method === "POST") {
-    console.log("ポスト");
+        const convertedResult = results.map((result: any) => {
+            return {
+                Todo_CommentID: result.id,
+                TodoID: result.todo_id,
+                CommentID: result.comment_id,
+            };
+        });
+        res.json(convertedResult);
 
-    const { TodoID, CommentID } = req.body;
+        // POST：新規Todo-コメントの登録
+    } else if (req.method === "POST") {
+        console.log("ポスト");
 
-    const result = await prisma.todos_Comments.create({
-      data: {
-        todo_id: TodoID,
-        comment_id: CommentID,
-      },
-    });
-    res.json(result);
+        const { TodoID, CommentID } = req.body;
 
-    // DELETE：Todo-コメントの全件削除
-  } else if (req.method === "DELETE") {
-    console.log("デリート");
+        const result = await prisma.todos_Comments.create({
+            data: {
+                todo_id: TodoID,
+                comment_id: CommentID,
+            },
+        });
+        res.json(result);
 
-    const deleteTodo_CommentIDs = req.body;
+        // DELETE：Todo-コメントの全件削除
+    } else if (req.method === "DELETE") {
+        console.log("デリート");
 
-    const result = await prisma.todos_Comments.deleteMany({
-      where: {
-        id: {
-          in: deleteTodo_CommentIDs,
-        },
-      },
-    });
+        const deleteTodo_CommentIDs = req.body;
 
-    res.json(result);
-  }
+        const result = await prisma.todos_Comments.deleteMany({
+            where: {
+                id: {
+                    in: deleteTodo_CommentIDs,
+                },
+            },
+        });
+
+        res.json(result);
+    }
 };
 
 export default Todo_CommentHandler;

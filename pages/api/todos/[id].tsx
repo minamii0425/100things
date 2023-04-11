@@ -1,75 +1,83 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../libs/prisma";
+import { supabase } from "../../../libs/supabase";
 
 const TodosHandlerWithID = async (
-  req: NextApiRequest,
-  res: NextApiResponse
+    req: NextApiRequest,
+    res: NextApiResponse
 ) => {
-  // GET：指定したIDを持つTodoを取得
-  if (req.method === "GET") {
-    const TodoID = req.query.id;
-    console.log(`TodoID：${TodoID}`);
+    // 認証のない場合は401エラー
+    // const { data, error } = await supabase.auth.getSession();
+    // if (!data.session) {
+    //     return res.status(401).json({ error: "Unauthorized" });
+    // }
 
-    const result = await prisma.todos.findUnique({
-      where: {
-        id: Number(TodoID),
-      },
-    });
+    // GET：指定したIDを持つTodoを取得
+    if (req.method === "GET") {
+        const TodoID = req.query.id;
+        console.log(`TodoID：${TodoID}`);
 
-    const convertedResult = {
-      TodoID: result?.id,
-      TodoName: result?.todo_name,
-      CompleteDate: result?.complete_date,
-      Location: result?.location,
-      Status: result?.status,
-      Description: result?.description,
-    };
+        const result = await prisma.todos.findUnique({
+            where: {
+                id: Number(TodoID),
+            },
+        });
 
-    res.json(convertedResult);
-  }
+        const convertedResult = {
+            TodoID: result?.id,
+            TodoName: result?.todo_name,
+            CompleteDate: result?.complete_date,
+            Location: result?.location,
+            Status: result?.status,
+            Description: result?.description,
+        };
 
-  // Delete：指定したIDを持つTodoを削除
-  else if (req.method === "DELETE") {
-    const TodoID = req.query.id;
+        res.json(convertedResult);
+    }
 
-    const result = await prisma.todos.delete({
-      where: {
-        id: Number(TodoID),
-      },
-    });
+    // Delete：指定したIDを持つTodoを削除
+    else if (req.method === "DELETE") {
+        const TodoID = req.query.id;
 
-    console.log(result);
-  }
+        const result = await prisma.todos.delete({
+            where: {
+                id: Number(TodoID),
+            },
+        });
 
-  // PUT：指定したIDを持つTodoを更新
-  else if (req.method === "PUT") {
-    const TodoID = req.query.id;
+        console.log(result);
+    }
 
-    const { TodoName, CompleteDate, Location, Status, Description } = req.body;
+    // PUT：指定したIDを持つTodoを更新
+    else if (req.method === "PUT") {
+        const TodoID = req.query.id;
 
-    console.log(`CompleteDate: ${CompleteDate}`);
-    console.log(`TodoName: ${TodoName}`);
-    console.log(`Location: ${Location}`);
-    console.log(`Status: ${Status}`);
-    console.log(`Description: ${Description}`);
+        const { TodoName, CompleteDate, Location, Status, Description } =
+            req.body;
 
-    const convertedCompleteDate = new Date(CompleteDate);
-    console.log(`convertedCompleteDate: ${convertedCompleteDate}`);
+        console.log(`CompleteDate: ${CompleteDate}`);
+        console.log(`TodoName: ${TodoName}`);
+        console.log(`Location: ${Location}`);
+        console.log(`Status: ${Status}`);
+        console.log(`Description: ${Description}`);
 
-    const result = await prisma.todos.update({
-      where: {
-        id: Number(TodoID),
-      },
-      data: {
-        todo_name: TodoName && TodoName,
-        complete_date: new Date(CompleteDate),
-        location: Location,
-        status: Status,
-        description: Description,
-      },
-    });
-    res.json(result);
-  }
+        const convertedCompleteDate = new Date(CompleteDate);
+        console.log(`convertedCompleteDate: ${convertedCompleteDate}`);
+
+        const result = await prisma.todos.update({
+            where: {
+                id: Number(TodoID),
+            },
+            data: {
+                todo_name: TodoName && TodoName,
+                complete_date: new Date(CompleteDate),
+                location: Location,
+                status: Status,
+                description: Description,
+            },
+        });
+        res.json(result);
+    }
 };
 
 export default TodosHandlerWithID;

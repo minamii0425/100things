@@ -33,17 +33,13 @@ import { useContext, useEffect, useState } from "react";
 import { SessionContext } from "next-auth/react";
 import { useRouter } from "next/router";
 import { supabase } from "../libs/supabase";
+import { makeSerializable } from "../utils/util";
 
 interface NavItem {
   label: string;
   subLabel?: string;
   children?: Array<NavItem>;
   href?: string;
-}
-
-interface HeaderUserProps {
-  loginUser?: string;
-  avatarURL?: string;
 }
 
 const NAV_ITEMS: Array<NavItem> = [
@@ -65,7 +61,25 @@ const NAV_ITEMS: Array<NavItem> = [
   },
 ];
 
-const Header = (props: HeaderUserProps) => {
+export const getServerSideProps = async () => {
+  const profile = await prisma!.profiles.findMany({});
+  const profile2 = profile.map((result: any) => {
+    return {
+      ID: result.id,
+      updated_at: makeSerializable(result.updated_at),
+      username: result.username,
+      full_name: result.full_name,
+    };
+  });
+
+  const test = "test";
+
+  return {
+    props: { body: { profile2 } },
+  };
+};
+
+const Header = ({ body }: any) => {
   const { isOpen, onToggle } = useDisclosure();
 
   const toast = useToast();
@@ -78,12 +92,20 @@ const Header = (props: HeaderUserProps) => {
     setPageSession(data.session?.user.email!);
   };
 
+  // ログインユーザーの取得
+  const [loginUser, setLoginUser] = useState("");
+  const getLoginUser = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    const loginUser = body.profile2.filter(
+      (row: any) => row.ID === data.session?.user.id
+    )[0].username;
+    setLoginUser(loginUser);
+  };
+
   useEffect(() => {
     getSession();
+    // getLoginUser();
   });
-
-  // console.log("hedader");
-  // console.log(props.loginUser);
 
   // サインアウト
   const onClickLogOut = async () => {
@@ -192,26 +214,26 @@ const Header = (props: HeaderUserProps) => {
                 cursor={"pointer"}
                 minW={0}
               >
-                <Avatar size={"sm"} src={props.avatarURL} />
+                <Avatar
+                  size={"sm"}
+                  src={"https://avatars.dicebear.com/api/male/username.svg"}
+                />
               </MenuButton>
               <MenuList alignItems={"center"}>
                 <br />
                 <Center>
-                  <Avatar size={"2xl"} src={props.avatarURL} />
+                  <Avatar
+                    size={"2xl"}
+                    src={"https://avatars.dicebear.com/api/male/username.svg"}
+                  />
                 </Center>
                 <br />
                 <Center>
-                  <p>{props.loginUser}</p>
+                  <p>{loginUser}</p>
                 </Center>
                 <br />
                 <MenuDivider />
-                <MenuItem
-                  onClick={() => {
-                    router.push("/settings");
-                  }}
-                >
-                  Account Settings
-                </MenuItem>
+                <MenuItem>Account Settings</MenuItem>
                 <MenuItem onClick={() => onClickLogOut()}>Logout</MenuItem>
               </MenuList>
             </Menu>

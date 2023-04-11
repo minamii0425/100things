@@ -1,11 +1,11 @@
+import { GetServerSideProps } from "next";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import Header from "../components/Header";
-import { SessionContext } from "./_app";
-import { useContext, useState, useEffect } from "react";
 import { supabase } from "../libs/supabase";
-import { GetServerSideProps, NextApiRequest, NextApiResponse } from "next";
 import { makeSerializable } from "../utils/util";
-import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]";
+import { SessionContext } from "./_app";
+import prisma from "../libs/prisma";
+import { Center, Box, Stack } from "@chakra-ui/react";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const profile = await prisma.profiles.findMany({});
@@ -24,10 +24,10 @@ export const getServerSideProps: GetServerSideProps = async () => {
     };
 };
 
-const Page = ({ body }: any) => {
+const About = ({ body }: any) => {
     // セッションの取得
     const session = useContext(SessionContext);
-    console.log("このページのセッション；" + session);
+    console.log(session);
 
     // ログインユーザーの取得
     const [loginUser, setLoginUser] = useState("");
@@ -56,9 +56,15 @@ const Page = ({ body }: any) => {
     return (
         <>
             <Header loginUser={loginUser} avatarURL={avatarURL} />
-            <div>あ</div>
+
+            <Center>
+                <Stack>
+                    <Box>誕生日おめでとう</Box>
+                    <Box>覚えていますか？</Box>
+                </Stack>
+            </Center>
         </>
     );
 };
 
-export default Page;
+export default About;

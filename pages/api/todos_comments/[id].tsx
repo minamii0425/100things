@@ -1,65 +1,72 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../libs/prisma";
+import { supabase } from "../../../libs/supabase";
 
 const Todos_CommentsHandlerWithID = async (
-  req: NextApiRequest,
-  res: NextApiResponse
+    req: NextApiRequest,
+    res: NextApiResponse
 ) => {
-  // GET：指定したIDを持つTodo-コメントを取得
-  if (req.method === "GET") {
-    const Todo_CommentID = req.query.id;
-    console.log(`Todos_コメントID：${Todo_CommentID}`);
+    // 認証のない場合は401エラー
+    // const { data, error } = await supabase.auth.getSession();
+    // if (!data.session) {
+    //     return res.status(401).json({ error: "Unauthorized" });
+    // }
 
-    const results = await prisma.todos_Comments.findMany({
-      where: {
-        todo_id: Number(Todo_CommentID),
-      },
-    });
+    // GET：指定したIDを持つTodo-コメントを取得
+    if (req.method === "GET") {
+        const Todo_CommentID = req.query.id;
+        console.log(`Todos_コメントID：${Todo_CommentID}`);
 
-    const convertedResult = results.map((result) => {
-      return {
-        Todos_CommentID: result.id,
-        TodoID: result.todo_id,
-        CommentID: result.comment_id,
-      };
-    });
+        const results = await prisma.todos_Comments.findMany({
+            where: {
+                todo_id: Number(Todo_CommentID),
+            },
+        });
 
-    res.json(convertedResult);
-  }
+        const convertedResult = results.map((result) => {
+            return {
+                Todos_CommentID: result.id,
+                TodoID: result.todo_id,
+                CommentID: result.comment_id,
+            };
+        });
 
-  // Delete：指定したIDを持つTodo-コメントを削除
-  else if (req.method === "DELETE") {
-    const Todo_CommentID = req.query.id;
+        res.json(convertedResult);
+    }
 
-    const result = await prisma.todos_Comments.deleteMany({
-      where: {
-        todo_id: Number(Todo_CommentID),
-      },
-    });
+    // Delete：指定したIDを持つTodo-コメントを削除
+    else if (req.method === "DELETE") {
+        const Todo_CommentID = req.query.id;
 
-    console.log(result);
-  }
+        const result = await prisma.todos_Comments.deleteMany({
+            where: {
+                todo_id: Number(Todo_CommentID),
+            },
+        });
 
-  // PUT：指定したIDを持つTodo-コメントを更新
-  // else if (req.method === "PUT") {
-  //   const Todo_CommentID = req.query.id;
+        console.log(result);
+    }
 
-  //   const { TodoName, CompleteDate, Location, Status, Description } = req.body;
+    // PUT：指定したIDを持つTodo-コメントを更新
+    // else if (req.method === "PUT") {
+    //   const Todo_CommentID = req.query.id;
 
-  //   const result = await prisma.todos.update({
-  //     where: {
-  //       id: Number(Todo_CommentID),
-  //     },
-  //     data: {
-  //       todo_name: TodoName,
-  //       complete_date: CompleteDate,
-  //       location: Location,
-  //       status: Status,
-  //       description: Description,
-  //     },
-  //   });
-  //   res.json(result);
-  // }
+    //   const { TodoName, CompleteDate, Location, Status, Description } = req.body;
+
+    //   const result = await prisma.todos.update({
+    //     where: {
+    //       id: Number(Todo_CommentID),
+    //     },
+    //     data: {
+    //       todo_name: TodoName,
+    //       complete_date: CompleteDate,
+    //       location: Location,
+    //       status: Status,
+    //       description: Description,
+    //     },
+    //   });
+    //   res.json(result);
+    // }
 };
 
 export default Todos_CommentsHandlerWithID;

@@ -1,62 +1,69 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../libs/prisma";
+import { supabase } from "../../../libs/supabase";
 
 const CommentsHandlerWithID = async (
-  req: NextApiRequest,
-  res: NextApiResponse
+    req: NextApiRequest,
+    res: NextApiResponse
 ) => {
-  // GET：指定したIDを持つコメントを取得
-  if (req.method === "GET") {
-    const CommentID = req.query.id;
-    console.log(`CommentID：${CommentID}`);
+    // 認証のない場合は401エラー
+    // const { data, error } = await supabase.auth.getSession();
+    // if (!data.session) {
+    //     return res.status(401).json({ error: "Unauthorized" });
+    // }
 
-    const result = await prisma.comments.findUnique({
-      where: {
-        id: Number(CommentID),
-      },
-    });
+    // GET：指定したIDを持つコメントを取得
+    if (req.method === "GET") {
+        const CommentID = req.query.id;
+        console.log(`CommentID：${CommentID}`);
 
-    const convertedResult = {
-      CommentID: result?.id,
-      CommentText: result?.comment_text,
-      CommentAuthor: result?.comment_author,
-    };
+        const result = await prisma.comments.findUnique({
+            where: {
+                id: Number(CommentID),
+            },
+        });
 
-    res.json(convertedResult);
-  }
+        const convertedResult = {
+            CommentID: result?.id,
+            CommentText: result?.comment_text,
+            CommentAuthor: result?.comment_author,
+        };
 
-  // Delete：指定したIDを持つコメントを削除
-  else if (req.method === "DELETE") {
-    const CommentID = req.query.id;
+        res.json(convertedResult);
+    }
 
-    const result = await prisma.comments.delete({
-      where: {
-        id: Number(CommentID),
-      },
-    });
+    // Delete：指定したIDを持つコメントを削除
+    else if (req.method === "DELETE") {
+        const CommentID = req.query.id;
 
-    res.json(result);
+        const result = await prisma.comments.delete({
+            where: {
+                id: Number(CommentID),
+            },
+        });
 
-    console.log(result);
-  }
+        res.json(result);
 
-  // PUT：指定したIDを持つコメントを更新
-  else if (req.method === "PUT") {
-    const CommentID = req.query.id;
+        console.log(result);
+    }
 
-    const { CommentText, CommentAuthor } = req.body;
+    // PUT：指定したIDを持つコメントを更新
+    else if (req.method === "PUT") {
+        const CommentID = req.query.id;
 
-    const result = await prisma.comments.update({
-      where: {
-        id: Number(CommentID),
-      },
-      data: {
-        comment_author: CommentAuthor,
-        comment_text: CommentText,
-      },
-    });
-    res.json(result);
-  }
+        const { CommentText, CommentAuthor } = req.body;
+
+        const result = await prisma.comments.update({
+            where: {
+                id: Number(CommentID),
+            },
+            data: {
+                comment_author: CommentAuthor,
+                comment_text: CommentText,
+            },
+        });
+        res.json(result);
+    }
 };
 
 export default CommentsHandlerWithID;
