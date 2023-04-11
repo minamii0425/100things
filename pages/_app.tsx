@@ -5,10 +5,6 @@ import { useState } from "react";
 import { supabase } from "../libs/supabase";
 import React from "react";
 import "react-dropzone-uploader/dist/styles.css";
-import { getServerSession } from "next-auth";
-import { NextApiRequest, NextApiResponse } from "next";
-import { authOptions } from "./api/auth/[...nextauth]";
-import { SessionProvider } from "next-auth/react";
 
 export const SessionContext =
     React.createContext<string | undefined>(undefined);
@@ -33,11 +29,9 @@ const MyApp = ({
 
     return (
         <ChakraProvider>
-            <SessionProvider session={session}>
-                <SessionContext.Provider value={pageSession}>
-                    <Component {...pageProps} />
-                </SessionContext.Provider>
-            </SessionProvider>
+            <SessionContext.Provider value={pageSession}>
+                <Component {...pageProps} />
+            </SessionContext.Provider>
         </ChakraProvider>
     );
 };
