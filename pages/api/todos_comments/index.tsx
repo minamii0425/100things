@@ -1,6 +1,9 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { getSession } from "next-auth/react";
 import prisma from "../../../libs/prisma";
 import { supabase } from "../../../libs/supabase";
+import { authOptions } from "../auth/[...nextauth]";
 
 // /todos
 const Todo_CommentHandler = async (
@@ -8,10 +11,11 @@ const Todo_CommentHandler = async (
     res: NextApiResponse
 ) => {
     // 認証のない場合は401エラー
-    // const { data, error } = await supabase.auth.getSession();
-    // if (!data.session) {
-    //     return res.status(401).json({ error: "Unauthorized" });
-    // }
+    const session = await getServerSession(req, res, authOptions);
+    console.log(session);
+    if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
 
     // GET：全Todo-コメントの取得
     if (req.method === "GET") {

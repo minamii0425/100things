@@ -1,16 +1,20 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { getSession } from "next-auth/react";
 import prisma from "../../../libs/prisma";
 import { supabase } from "../../../libs/supabase";
+import { authOptions } from "../auth/[...nextauth]";
 
 const TodosHandlerWithID = async (
     req: NextApiRequest,
     res: NextApiResponse
 ) => {
     // 認証のない場合は401エラー
-    // const { data, error } = await supabase.auth.getSession();
-    // if (!data.session) {
-    //     return res.status(401).json({ error: "Unauthorized" });
-    // }
+    const session = await getServerSession(req, res, authOptions);
+    console.log(session);
+    if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
 
     // GET：指定したIDを持つTodoを取得
     if (req.method === "GET") {
@@ -51,7 +55,6 @@ const TodosHandlerWithID = async (
     // PUT：指定したIDを持つTodoを更新
     else if (req.method === "PUT") {
         const TodoID = req.query.id;
-
         const { TodoName, CompleteDate, Location, Status, Description } =
             req.body;
 

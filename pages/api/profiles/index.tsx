@@ -1,18 +1,20 @@
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "next-auth/react";
+import { getServerSession } from "next-auth/next";
+import { getSession, useSession } from "next-auth/react";
 import { useContext } from "react";
 import prisma from "../../../libs/prisma";
 import { supabase } from "../../../libs/supabase";
 // import { session } from "../../../utils/util";
 import { SessionContext } from "../../_app";
+import { authOptions } from "../auth/[...nextauth]";
 
 // /comments
 const ProfilesHandler = async (req: NextApiRequest, res: NextApiResponse) => {
-    // 直接アクセス時はルートディレクトリにリダイレクト
-    // const { data, error } = await supabase.auth.getSession();
-    // if (!data.session) {
-    //     return res.status(401).json({ error: "Unauthorized" });
-    // }
+    const session = await getServerSession(req, res, authOptions);
+    console.log(session);
+    if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
 
     // GET：全Commentの取得
     if (req.method === "GET") {

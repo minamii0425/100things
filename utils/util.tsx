@@ -6,6 +6,8 @@ export function makeSerializable<T extends any>(o: T): T {
     return JSON.parse(JSON.stringify(o));
 }
 
+import { NextApiRequest, NextApiResponse } from "next";
+import { getSession } from "next-auth/react";
 import { useContext } from "react";
 import prisma from "../libs/prisma";
 import { SessionContext } from "../pages/_app";
@@ -25,4 +27,27 @@ export const getServerSideProps = async () => {
     };
 };
 
+// つかえない・・・
+export const APIAuthorization = async (
+    req: NextApiRequest,
+    res: NextApiResponse
+) => {
+    const session = await getSession({ req });
+    console.log("APIの認証");
+    console.log(session);
+
+    // 認証のない場合は401エラー
+    if (!session) {
+        console.log("エラー");
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+    return;
+};
+
 // export const session = useContext(SessionContext);
+
+export const Session = async (req: NextApiRequest, res: NextApiResponse) => {
+    const session = await getSession({ req });
+
+    return session;
+};

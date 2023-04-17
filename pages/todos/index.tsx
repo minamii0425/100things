@@ -17,6 +17,8 @@ import { supabase } from "../../libs/supabase";
 import { makeSerializable } from "../../utils/util";
 import prisma from "../../libs/prisma";
 import { SessionContext } from "../_app";
+import Layout from "../../components/Layout";
+import { useRouter } from "next/router";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     // Todosテーブルより
@@ -91,29 +93,11 @@ const Todos = ({ body }: any) => {
     // セッションの取得
     const session = useContext(SessionContext);
 
-    // ログインユーザーの取得
-    const [loginUser, setLoginUser] = useState("");
-    const [avatarURL, setAvatarURL] = useState("");
-    const getLoginUser = async () => {
-        const { data, error } = await supabase.auth.getSession();
-        const loginUser = body.profile2.filter(
-            (row: any) => row.ID === data.session?.user.id
-        );
-        setLoginUser(loginUser[0].username);
+    const router = useRouter();
 
-        const avatarURL = body.profile2.filter(
-            (row: any) => row.ID === data.session?.user.id
-        )[0].avatar_url;
-
-        setAvatarURL(avatarURL);
-    };
-
-    // 初回読み込み時にログインユーザーをセット
-    useEffect(() => {
-        if (session) {
-            getLoginUser();
-        }
-    }, [session]);
+    if (session!) {
+        router.push("/");
+    }
 
     const IntermediateTableArray = body.convertedIntermediateTableResponse;
     const TagArray = body.convertedTagResponse;
@@ -199,8 +183,7 @@ const Todos = ({ body }: any) => {
     const breakpoint = useBreakpoint();
 
     return (
-        <>
-            <Header loginUser={loginUser} avatarURL={avatarURL} />
+        <Layout>
             <Center mt={[4, 6, 12, 16, 20]} mb={[10, 10, 10, 10, 10]}>
                 <Stack mb={[1, 2, 3, 4, 5]}>
                     <Heading size={["sm", "md", "lg", "xl", "2xl"]}>
@@ -311,7 +294,7 @@ const Todos = ({ body }: any) => {
                     )}
                 </Grid>
             </Center>
-        </>
+        </Layout>
     );
 };
 

@@ -1,19 +1,31 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { getSession } from "next-auth/react";
 
 import prisma from "../../../libs/prisma";
 import { supabase } from "../../../libs/supabase";
+import { authOptions } from "../auth/[...nextauth]";
 
 // /todos
 const TodoHandler = async (req: NextApiRequest, res: NextApiResponse) => {
     // 認証のない場合は401エラー
-    // const { data, error } = await supabase.auth.getSession();
-    // if (!data.session) {
-    //     return res.status(401).json({ error: "Unauthorized" });
-    // }
+    const session = await getServerSession(req, res, authOptions);
+    console.log(session);
+    if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    console.log(session);
 
     // GET：全Todoの取得
     if (req.method === "GET") {
         console.log("ゲット");
+
+        // const session = await getSession({ req });
+        const session = await getServerSession(req, res, authOptions);
+        if (!session) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
 
         const results = await prisma.todos.findMany({});
 
@@ -32,6 +44,11 @@ const TodoHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         // POST：新規Todoの登録
     } else if (req.method === "POST") {
         console.log("ポスト");
+
+        const session = await getSession({ req });
+        if (!session) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
 
         const {
             TodoID,
@@ -57,6 +74,11 @@ const TodoHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         // DELETE：Todoの全件削除
     } else if (req.method === "DELETE") {
         console.log("デリート");
+
+        const session = await getSession({ req });
+        if (!session) {
+            return res.status(401).json({ error: "Unauthorized" });
+        }
 
         const deleteTodoIDs = req.body;
 
