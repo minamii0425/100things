@@ -9,32 +9,11 @@ import { getServerSession } from "next-auth/next";
 // /tags
 const TagHandler = async (req: NextApiRequest, res: NextApiResponse) => {
     // // 認証のない場合は401エラー
-    // const { data, error } = await supabase.auth.getSession();
-    // const session = SessionContext;
-    // console.log(SessionContext);
-
-    // console.log(data);
-    // if (!data.session) {
-    //     return res.status(401).json({ error: "Unauthorized" });
-    // }
-
-    // const session = await getServerSession(req, res, authOptions);
-    const { data, error } = await supabase.auth.getSession();
-    // const session = await getSession({ req });
-    // const session = await getServerSession();
-    // const session = await getSession();
-    // console.log("session");
-    // console.log(session);
-    // console.log(data);
-    console.log(data);
-    console.log(error);
-    // if (session) {
-    //     // Signed in
-    //     console.log("Session", JSON.stringify(session, null, 2));
-    // } else {
-    //     // Not Signed in
-    //     res.status(401);
-    // }
+    const session = await getServerSession(req, res, authOptions);
+    console.log(session);
+    if (!session) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
 
     // GET：全タグの取得
     if (req.method === "GET") {

@@ -1,10 +1,12 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { ChakraProvider } from "@chakra-ui/react";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { supabase } from "../libs/supabase";
 import React from "react";
 import "react-dropzone-uploader/dist/styles.css";
+import { SessionProvider } from "next-auth/react";
+import { useRouter } from "next/router";
 
 export const SessionContext =
     React.createContext<string | undefined>(undefined);
@@ -14,24 +16,14 @@ const MyApp = ({
     pageProps: { session, ...pageProps },
     body,
 }: any) => {
-    // セッションの取得
-    const [pageSession, setPageSession] =
-        useState<string | undefined>(undefined);
-
-    const getSession = async () => {
-        const { data, error } = await supabase.auth.getSession();
-        // console.log(data.session?.user);
-        setPageSession(data.session?.user.id);
-    };
-
-    getSession();
-    const test = "test";
-
+    console.log("NEXT_PUBLIC_NODE_ENV: " + process.env.NEXT_PUBLIC_NODE_ENV);
     return (
         <ChakraProvider>
-            <SessionContext.Provider value={pageSession}>
+            <SessionProvider>
+                {/* <SessionContext.Provider value={pageSession}> */}
                 <Component {...pageProps} />
-            </SessionContext.Provider>
+                {/* </SessionContext.Provider> */}
+            </SessionProvider>
         </ChakraProvider>
     );
 };

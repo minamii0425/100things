@@ -6,6 +6,8 @@ import { makeSerializable } from "../utils/util";
 import { SessionContext } from "./_app";
 import prisma from "../libs/prisma";
 import { Center, Box, Stack } from "@chakra-ui/react";
+import { useSession } from "next-auth/react";
+import Layout from "../components/Layout";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     const profile = await prisma.profiles.findMany({});
@@ -26,43 +28,20 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
 const About = ({ body }: any) => {
     // セッションの取得
-    const session = useContext(SessionContext);
+    // const session = useContext(SessionContext);
+    const { data: session } = useSession();
     console.log(session);
-
-    // ログインユーザーの取得
-    const [loginUser, setLoginUser] = useState("");
-    const [avatarURL, setAvatarURL] = useState("");
-
-    const getLoginUser = async () => {
-        const { data, error } = await supabase.auth.getSession();
-        const loginUser = body.profile2.filter(
-            (row: any) => row.ID === data.session?.user.id
-        );
-        setLoginUser(loginUser[0].username);
-
-        const avatarURL = body.profile2.filter(
-            (row: any) => row.ID === data.session?.user.id
-        )[0].avatar_url;
-
-        setAvatarURL(avatarURL);
-    };
-
-    useEffect(() => {
-        if (session) {
-            getLoginUser();
-        }
-    }, [session]);
 
     return (
         <>
-            <Header loginUser={loginUser} avatarURL={avatarURL} />
-
-            <Center>
-                <Stack>
-                    <Box>誕生日おめでとう</Box>
-                    <Box>覚えていますか？</Box>
-                </Stack>
-            </Center>
+            <Layout>
+                <Center>
+                    <Stack>
+                        <Box>誕生日おめでとう</Box>
+                        <Box>覚えていますか？</Box>
+                    </Stack>
+                </Center>
+            </Layout>
         </>
     );
 };

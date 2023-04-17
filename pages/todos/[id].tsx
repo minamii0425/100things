@@ -50,6 +50,7 @@ import { tagClient } from "../../utils/axiosInstancesServerside";
 import { todoTagClient } from "../../utils/axiosInstancesServerside";
 import { SessionContext } from "../_app";
 import Header from "../../components/Header";
+import { useSession } from "next-auth/react";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
     // 変数
@@ -128,18 +129,6 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
             };
         });
 
-    // ユーザー情報の取得
-    const profile = await prisma.profiles.findMany({});
-    const profile2 = profile.map((result) => {
-        return {
-            ProfileID: result.id,
-            updated_at: makeSerializable(result.updated_at),
-            UserName: result.username,
-            FullName: result.full_name,
-            AvatarURL: result.avatar_url,
-        };
-    });
-
     // 画像の取得
     const { data, error } = await supabase.storage
         .from("images")
@@ -154,7 +143,6 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
                 convertedCommentResponse,
                 convertedIntermediateCommentTableResponse,
                 publicUrl,
-                profile2,
                 ImageURLs: data,
             },
         },
@@ -163,41 +151,10 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
 
 const TodoDetailForm = ({ body }: any) => {
     // セッションの取得
-    const loginUserID = useContext(SessionContext);
-    console.log(`loginUserID: ${loginUserID}`);
-
-    // ログインユーザーの取得
-    const [loginUser, setLoginUser] = useState("");
-    const [avatarURL, setAvatarURL] = useState("");
-
-    const getLoginUser = async () => {
-        const { data, error } = await supabase.auth.getSession();
-        const loginUser = body.profile2.filter(
-            (row: any) => row.ProfileID === data.session?.user.id
-        );
-        setLoginUser(loginUser[0].UserName);
-
-        const avatarURL = body.profile2.filter(
-            (row: any) => row.ProfileID === data.session?.user.id
-        )[0].AvatarURL;
-
-        setAvatarURL(avatarURL);
-    };
-
-    useEffect(() => {
-        if (loginUserID) {
-            getLoginUser();
-        }
-    }, [loginUserID]);
+    const { data: session } = useSession();
 
     const router = useRouter();
     const id = Number(router.query.id);
-
-    const Users = body.profile2;
-
-    const user = Users.filter(
-        (row: Profile) => row.ProfileID === loginUserID
-    )[0];
 
     const IMAGE_URL_DOMAIN =
         process.env.NEXT_PUBLIC_SUPABASE_URL +
@@ -265,7 +222,6 @@ const TodoDetailForm = ({ body }: any) => {
     );
 
     // 日付のフォーマット変更
-
     const Date = TodoArray.CompleteDate && TodoArray.CompleteDate;
     const convertedCompleteDate = Date && Date.substr(0, 10);
 
@@ -489,8 +445,8 @@ const TodoDetailForm = ({ body }: any) => {
         const submit = await commentClient.$post({
             body: {
                 CommentText: inputData,
-                CommentAuthor: user.FullName,
-                CommentAvatar: user.AvatarURL,
+                CommentAuthor: session!.user?.name!,
+                CommentAvatar: session!.user?.image!,
             },
         });
 
@@ -507,8 +463,8 @@ const TodoDetailForm = ({ body }: any) => {
             ...CommentFromServer,
             {
                 CommentText: inputData,
-                CommentAuthor: user.FullName,
-                CommentAvatar: user.AvatarURL,
+                CommentAuthor: session!.user?.name!,
+                CommentAvatar: session!.user?.image,
             },
         ]);
 
@@ -523,274 +479,270 @@ const TodoDetailForm = ({ body }: any) => {
 
     return (
         <>
-            <Header loginUser={loginUser} avatarURL={avatarURL} />
-            <Stack padding={10}>
-                <Box mb="1">
-                    <Flex>
-                        <Heading size="lg" mb="5">
-                            {/* {SearchObject(id, "TodoName")} */}
-                            {TodoArray.TodoName}
-                        </Heading>
-                        <Spacer />
-                        <Button
-                            onClick={() => router.push("/todos")}
-                            variant="ghost"
-                        >
-                            ←Back
-                        </Button>
-                    </Flex>
-                    <Box mb="3">
-                        {/* <Image
+            {/* <Header loginUser={loginUser} avatarURL={avatarURL} /> */}
+            <Layout>
+                <Stack padding={10}>
+                    <Box mb="1">
+                        <Flex>
+                            <Heading size="lg" mb="5">
+                                {/* {SearchObject(id, "TodoName")} */}
+                                {TodoArray.TodoName}
+                            </Heading>
+                            <Spacer />
+                            <Button
+                                onClick={() => router.push("/todos")}
+                                variant="ghost"
+                            >
+                                ←Back
+                            </Button>
+                        </Flex>
+                        <Box mb="3">
+                            {/* <Image
                 src={body.publicUrl}
                 alt="Dan Abramov"
                 width="100%"
                 height="300px"
                 objectFit="cover"
               /> */}
-                        <Carousel cards={CarouselCards} />
-                    </Box>
-                    <Editable
-                        value={inputDescription}
-                        onSubmit={() => onSubmitDescription(inputDescription)}
-                        placeholder={
-                            loginUserID === undefined
-                                ? "ログインして編集"
-                                : "クリックで編集"
-                        }
-                        isDisabled={loginUserID === undefined ? true : false}
-                    >
-                        <EditablePreview />
-                        <EditableTextarea
-                            onChange={(e) =>
-                                setInputDescription(e.target.value)
-                            }
-                        />
-                    </Editable>
-                </Box>
-
-                {/* タグ */}
-                <Box>
-                    <Box mb="4">
-                        <Box mb="2">
-                            <Text size="xl" as="b">
-                                Tags
-                            </Text>
+                            <Carousel cards={CarouselCards} />
                         </Box>
-                        <HStack>
-                            {TagFromServer.map((tag: TagName) => {
-                                return (
-                                    <ChakraTag
-                                        key={tag}
-                                        onClick={() => onClickTag(tag)}
-                                    >
-                                        {tag}
-                                    </ChakraTag>
-                                );
-                            })}
-                            {loginUserID !== undefined ? (
-                                <Editable
-                                    value={inputTag}
-                                    onSubmit={() => onSubmitTag(inputTag)}
-                                    isDisabled={
-                                        loginUserID === undefined ? true : false
-                                    }
-                                    onClick={() => setInputTag("")}
-                                >
-                                    <EditablePreview />
-                                    <EditableInput
-                                        onChange={(e) =>
-                                            setInputTag(e.target.value)
-                                        }
-                                        onKeyDown={(e) => onEnterDown(e)}
-                                    />
-                                </Editable>
-                            ) : (
-                                <Box>ログインして編集</Box>
-                            )}
-                        </HStack>
+                        <Editable
+                            value={inputDescription}
+                            onSubmit={() =>
+                                onSubmitDescription(inputDescription)
+                            }
+                            placeholder={
+                                !session ? "ログインして編集" : "クリックで編集"
+                            }
+                            isDisabled={!session ? true : false}
+                        >
+                            <EditablePreview />
+                            <EditableTextarea
+                                onChange={(e) =>
+                                    setInputDescription(e.target.value)
+                                }
+                            />
+                        </Editable>
                     </Box>
-                </Box>
 
-                {/* Complete Date・Location・Status */}
-                <Box>
-                    <Box mb="4">
-                        <Wrap>
-                            <WrapItem w="200px">
-                                <Box>
-                                    <Box mb="2">
-                                        <Text size="xl" as="b">
-                                            Complete Date
-                                        </Text>
-                                    </Box>
+                    {/* タグ */}
+                    <Box>
+                        <Box mb="4">
+                            <Box mb="2">
+                                <Text size="xl" as="b">
+                                    Tags
+                                </Text>
+                            </Box>
+                            <HStack>
+                                {TagFromServer.map((tag: TagName) => {
+                                    return (
+                                        <ChakraTag
+                                            key={tag}
+                                            onClick={() => onClickTag(tag)}
+                                        >
+                                            {tag}
+                                        </ChakraTag>
+                                    );
+                                })}
+                                {session ? (
                                     <Editable
-                                        defaultValue={inputCompleteDate}
-                                        onSubmit={() =>
-                                            onSubmitCompleteDate(
-                                                inputCompleteDate
-                                            )
-                                        }
-                                        placeholder={
-                                            loginUserID === undefined
-                                                ? "ログインして編集"
-                                                : "クリックで編集"
-                                        }
-                                        isDisabled={
-                                            loginUserID === undefined
-                                                ? true
-                                                : false
-                                        }
+                                        value={inputTag}
+                                        onSubmit={() => onSubmitTag(inputTag)}
+                                        isDisabled={!session ? true : false}
+                                        onClick={() => setInputTag("")}
                                     >
                                         <EditablePreview />
                                         <EditableInput
-                                            type="date"
                                             onChange={(e) =>
-                                                setInputCompleteDate(
-                                                    e.target.value
-                                                )
-                                            }
-                                        />
-                                    </Editable>
-                                </Box>
-                            </WrapItem>
-
-                            <WrapItem w="200px">
-                                <Box>
-                                    <Box mb="2">
-                                        <Text size="xl" as="b">
-                                            Location
-                                        </Text>
-                                    </Box>
-                                    <Editable
-                                        value={inputLocation}
-                                        onSubmit={() =>
-                                            onSubmitLocation(inputLocation)
-                                        }
-                                        placeholder={
-                                            loginUserID === undefined
-                                                ? "ログインして編集"
-                                                : "クリックで編集"
-                                        }
-                                        isDisabled={
-                                            loginUserID === undefined
-                                                ? true
-                                                : false
-                                        }
-                                    >
-                                        <EditablePreview width="200" />
-                                        <EditableInput
-                                            width="200"
-                                            onChange={(e) =>
-                                                setInputLocation(e.target.value)
+                                                setInputTag(e.target.value)
                                             }
                                             onKeyDown={(e) => onEnterDown(e)}
                                         />
                                     </Editable>
-                                </Box>
-                            </WrapItem>
-
-                            <WrapItem w="200px">
-                                <Box>
-                                    <Box mb="2">
-                                        <Text size="xl" as="b">
-                                            Status
-                                        </Text>
-                                    </Box>
-                                    <Select
-                                        defaultValue={inputStatus}
-                                        onChange={(e) =>
-                                            onSubmitStatus(
-                                                e.target.value as Status
-                                            )
-                                        }
-                                        disabled={
-                                            loginUserID === undefined
-                                                ? true
-                                                : false
-                                        }
-                                    >
-                                        <option value="Undone">Undone</option>
-                                        <option value="Planning">
-                                            Planning
-                                        </option>
-                                        <option value="Done">Done</option>
-                                    </Select>
-                                </Box>
-                            </WrapItem>
-                        </Wrap>
-                    </Box>
-                </Box>
-
-                {/* Comments */}
-                <Box>
-                    <Box mb="2">
-                        <Text size="xl" as="b">
-                            Comments
-                        </Text>
-                    </Box>
-
-                    {CommentFromServer.length !== 0 ? (
-                        CommentFromServer.map((comment: any, i: number) => {
-                            return (
-                                <Box mb="5" key={i}>
-                                    <HStack>
-                                        <Avatar
-                                            name={comment.CommentAuthor}
-                                            src={comment.CommentAvatar}
-                                        />
-                                        <Text fontSize="sm">
-                                            {comment.CommentText}
-                                        </Text>
-                                    </HStack>
-                                </Box>
-                            );
-                        })
-                    ) : (
-                        <Box mt={3} mb={5}>
-                            No Comments
-                        </Box>
-                    )}
-
-                    <FormControl>
-                        <Box mb="5">
-                            <HStack>
-                                <Avatar
-                                    name={user ? user.FullName : ""}
-                                    src={user ? user.AvatarURL : ""}
-                                />
-                                <Textarea
-                                    height="100px"
-                                    fontSize="sm"
-                                    value={inputComment}
-                                    onChange={(e) =>
-                                        setInputComment(e.target.value)
-                                    }
-                                    disabled={
-                                        loginUserID === undefined ? true : false
-                                    }
-                                    placeholder={
-                                        loginUserID === undefined
-                                            ? "ログインしてコメント"
-                                            : ""
-                                    }
-                                />
+                                ) : (
+                                    <Box>ログインして編集</Box>
+                                )}
                             </HStack>
                         </Box>
+                    </Box>
 
-                        <Flex>
-                            <Spacer />
-                            <Button
-                                onClick={() => onSubmitComment(inputComment)}
-                                disabled={
-                                    loginUserID === undefined ? true : false
-                                }
-                                colorScheme="purple"
-                            >
-                                Submit Comment
-                            </Button>
-                        </Flex>
-                    </FormControl>
-                </Box>
-            </Stack>
+                    {/* Complete Date・Location・Status */}
+                    <Box>
+                        <Box mb="4">
+                            <Wrap>
+                                <WrapItem w="200px">
+                                    <Box>
+                                        <Box mb="2">
+                                            <Text size="xl" as="b">
+                                                Complete Date
+                                            </Text>
+                                        </Box>
+                                        <Editable
+                                            defaultValue={inputCompleteDate}
+                                            onSubmit={() =>
+                                                onSubmitCompleteDate(
+                                                    inputCompleteDate
+                                                )
+                                            }
+                                            placeholder={
+                                                !session
+                                                    ? "ログインして編集"
+                                                    : "クリックで編集"
+                                            }
+                                            isDisabled={!session ? true : false}
+                                        >
+                                            <EditablePreview />
+                                            <EditableInput
+                                                type="date"
+                                                onChange={(e) =>
+                                                    setInputCompleteDate(
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+                                        </Editable>
+                                    </Box>
+                                </WrapItem>
+
+                                <WrapItem w="200px">
+                                    <Box>
+                                        <Box mb="2">
+                                            <Text size="xl" as="b">
+                                                Location
+                                            </Text>
+                                        </Box>
+                                        <Editable
+                                            value={inputLocation}
+                                            onSubmit={() =>
+                                                onSubmitLocation(inputLocation)
+                                            }
+                                            placeholder={
+                                                !session
+                                                    ? "ログインして編集"
+                                                    : "クリックで編集"
+                                            }
+                                            isDisabled={!session ? true : false}
+                                        >
+                                            <EditablePreview width="200" />
+                                            <EditableInput
+                                                width="200"
+                                                onChange={(e) =>
+                                                    setInputLocation(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                onKeyDown={(e) =>
+                                                    onEnterDown(e)
+                                                }
+                                            />
+                                        </Editable>
+                                    </Box>
+                                </WrapItem>
+
+                                <WrapItem w="200px">
+                                    <Box>
+                                        <Box mb="2">
+                                            <Text size="xl" as="b">
+                                                Status
+                                            </Text>
+                                        </Box>
+                                        <Select
+                                            defaultValue={inputStatus}
+                                            onChange={(e) =>
+                                                onSubmitStatus(
+                                                    e.target.value as Status
+                                                )
+                                            }
+                                            disabled={!session ? true : false}
+                                        >
+                                            <option value="Undone">
+                                                Undone
+                                            </option>
+                                            <option value="Planning">
+                                                Planning
+                                            </option>
+                                            <option value="Done">Done</option>
+                                        </Select>
+                                    </Box>
+                                </WrapItem>
+                            </Wrap>
+                        </Box>
+                    </Box>
+
+                    {/* Comments */}
+                    <Box>
+                        <Box mb="2">
+                            <Text size="xl" as="b">
+                                Comments
+                            </Text>
+                        </Box>
+
+                        {CommentFromServer.length !== 0 ? (
+                            CommentFromServer.map((comment: any, i: number) => {
+                                return (
+                                    <Box mb="5" key={i}>
+                                        <HStack>
+                                            <Avatar
+                                                name={comment.CommentAuthor}
+                                                src={comment.CommentAvatar}
+                                            />
+                                            <Text fontSize="sm">
+                                                {comment.CommentText}
+                                            </Text>
+                                        </HStack>
+                                    </Box>
+                                );
+                            })
+                        ) : (
+                            <Box mt={3} mb={5}>
+                                No Comments
+                            </Box>
+                        )}
+
+                        <FormControl>
+                            <Box mb="5">
+                                <HStack>
+                                    <Avatar
+                                        name={
+                                            session ? session.user?.name! : ""
+                                        }
+                                        src={
+                                            session ? session.user?.image! : ""
+                                        }
+                                    />
+                                    <Textarea
+                                        height="100px"
+                                        fontSize="sm"
+                                        value={inputComment}
+                                        onChange={(e) =>
+                                            setInputComment(e.target.value)
+                                        }
+                                        disabled={!session ? true : false}
+                                        placeholder={
+                                            !session
+                                                ? "ログインしてコメント"
+                                                : ""
+                                        }
+                                    />
+                                </HStack>
+                            </Box>
+
+                            <Flex>
+                                <Spacer />
+                                <Button
+                                    onClick={() =>
+                                        onSubmitComment(inputComment)
+                                    }
+                                    disabled={!session ? true : false}
+                                    colorScheme="purple"
+                                >
+                                    Submit Comment
+                                </Button>
+                            </Flex>
+                        </FormControl>
+                    </Box>
+                </Stack>
+            </Layout>
         </>
     );
 };
