@@ -1,0 +1,24 @@
+@media only screen and (max-width: 767px) {
+    .Footer {
+        bottom: -425px;
+    }
+}
+
+@media only screen and (min-width: 768px) {
+    .Footer {
+        bottom: -250px;
+    }
+}
+
+.Footer {
+    position: fixed;
+    margin-right: auto;
+    margin-left: auto;
+    transition: 0.3s;
+}
+
+.onClickFooter {
+    position: fixed;
+    bottom: -10px;
+    transition: 0.3s;
+}

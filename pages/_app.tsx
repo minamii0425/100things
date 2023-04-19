@@ -7,6 +7,7 @@ import React from "react";
 import "react-dropzone-uploader/dist/styles.css";
 import { SessionProvider } from "next-auth/react";
 import { useRouter } from "next/router";
+import { theme } from "../utils/theme";
 
 export const SessionContext =
     React.createContext<string | undefined>(undefined);
@@ -18,11 +19,9 @@ const MyApp = ({
 }: any) => {
     console.log("NEXT_PUBLIC_NODE_ENV: " + process.env.NEXT_PUBLIC_NODE_ENV);
     return (
-        <ChakraProvider>
+        <ChakraProvider theme={theme}>
             <SessionProvider>
-                {/* <SessionContext.Provider value={pageSession}> */}
                 <Component {...pageProps} />
-                {/* </SessionContext.Provider> */}
             </SessionProvider>
         </ChakraProvider>
     );

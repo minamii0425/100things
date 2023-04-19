@@ -30,6 +30,7 @@ import { GetServerSideProps } from "next";
 import { makeSerializable } from "../utils/util";
 import { supabase } from "../libs/supabase";
 import { todoClient } from "../utils/axiosInstancesServerside";
+import styles from "./component.module.scss";
 
 export interface TodoCardProps {
     Key?: TodoID;
@@ -83,11 +84,11 @@ const TodoCard = (props: TodoCardProps) => {
 
     return (
         <>
-            <Card maxW="sm">
+            <Card maxW="sm" className={styles.card}>
                 <Image
                     src={props.CardImage}
                     alt=""
-                    borderRadius="lg"
+                    borderTopRadius="lg"
                     objectFit="cover"
                     minHeight="200"
                     maxHeight="200"
@@ -98,6 +99,7 @@ const TodoCard = (props: TodoCardProps) => {
                     }}
                     minHeight="140"
                     maxHeight="140"
+                    className={styles.cardBody}
                 >
                     <Stack mt="1" spacing="2">
                         <Heading size="md">{props.TodoName}</Heading>
@@ -112,8 +114,11 @@ const TodoCard = (props: TodoCardProps) => {
                         </Text>
                     </Stack>
                 </CardBody>
-                <Divider />
-                <CardFooter>
+                {/* <Divider /> */}
+                <CardFooter
+                    className={styles.cardFooter}
+                    borderBottomRadius="lg"
+                >
                     <ButtonGroup spacing="4">
                         <Button
                             variant="solid"

@@ -23,6 +23,8 @@ import {
     ButtonSpinner,
     FormControl,
     useRadioGroup,
+    TagLabel,
+    TagCloseButton,
 } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
 import { supabase } from "../../libs/supabase";
@@ -479,7 +481,6 @@ const TodoDetailForm = ({ body }: any) => {
 
     return (
         <>
-            {/* <Header loginUser={loginUser} avatarURL={avatarURL} /> */}
             <Layout>
                 <Stack padding={10}>
                     <Box mb="1">
@@ -497,13 +498,6 @@ const TodoDetailForm = ({ body }: any) => {
                             </Button>
                         </Flex>
                         <Box mb="3">
-                            {/* <Image
-                src={body.publicUrl}
-                alt="Dan Abramov"
-                width="100%"
-                height="300px"
-                objectFit="cover"
-              /> */}
                             <Carousel cards={CarouselCards} />
                         </Box>
                         <Editable
@@ -521,6 +515,7 @@ const TodoDetailForm = ({ body }: any) => {
                                 onChange={(e) =>
                                     setInputDescription(e.target.value)
                                 }
+                                bg={"#EDFDFD"}
                             />
                         </Editable>
                     </Box>
@@ -536,12 +531,28 @@ const TodoDetailForm = ({ body }: any) => {
                             <HStack>
                                 {TagFromServer.map((tag: TagName) => {
                                     return (
-                                        <ChakraTag
-                                            key={tag}
-                                            onClick={() => onClickTag(tag)}
-                                        >
-                                            {tag}
-                                        </ChakraTag>
+                                        // <ChakraTag
+                                        //     key={tag}
+                                        //     onClick={() => onClickTag(tag)}
+                                        // >
+                                        //     {tag}
+                                        // </ChakraTag>
+                                        <HStack spacing={4}>
+                                            <ChakraTag
+                                                size={"md"}
+                                                key={tag}
+                                                borderRadius="md"
+                                                variant="solid"
+                                                colorScheme="blue"
+                                            >
+                                                <TagLabel>{tag}</TagLabel>
+                                                <TagCloseButton
+                                                    onClick={() =>
+                                                        onClickTag(tag)
+                                                    }
+                                                />
+                                            </ChakraTag>
+                                        </HStack>
                                     );
                                 })}
                                 {session ? (
@@ -599,6 +610,7 @@ const TodoDetailForm = ({ body }: any) => {
                                                         e.target.value
                                                     )
                                                 }
+                                                bg={"#EDFDFD"}
                                             />
                                         </Editable>
                                     </Box>
@@ -634,6 +646,7 @@ const TodoDetailForm = ({ body }: any) => {
                                                 onKeyDown={(e) =>
                                                     onEnterDown(e)
                                                 }
+                                                bg={"#EDFDFD"}
                                             />
                                         </Editable>
                                     </Box>
@@ -654,6 +667,7 @@ const TodoDetailForm = ({ body }: any) => {
                                                 )
                                             }
                                             disabled={!session ? true : false}
+                                            bg={"#EDFDFD"}
                                         >
                                             <option value="Undone">
                                                 Undone
@@ -723,6 +737,7 @@ const TodoDetailForm = ({ body }: any) => {
                                                 ? "ログインしてコメント"
                                                 : ""
                                         }
+                                        bg={"#EDFDFD"}
                                     />
                                 </HStack>
                             </Box>
