@@ -4,9 +4,23 @@ import {
     GridItem,
     Heading,
     Highlight,
+    HStack,
+    Select,
     Stack,
     Tag as ChakraTag,
     useBreakpoint,
+    Text,
+    ModalFooter,
+    Button,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalHeader,
+    ModalOverlay,
+    useDisclosure,
+    Box,
+    Link,
 } from "@chakra-ui/react";
 import { GetServerSideProps } from "next";
 import { useContext, useEffect, useState } from "react";
@@ -19,6 +33,8 @@ import prisma from "../../libs/prisma";
 import { SessionContext } from "../_app";
 import Layout from "../../components/Layout";
 import { useRouter } from "next/router";
+import styles from "../page.module.scss";
+import React from "react";
 
 export const getServerSideProps: GetServerSideProps = async () => {
     // Todosテーブルより
@@ -181,119 +197,272 @@ const Todos = ({ body }: any) => {
     };
 
     const breakpoint = useBreakpoint();
+    console.log(breakpoint);
+
+    // プルダウン
+    const ohChangeTodoIDPulldown = (e: number) => {
+        if (!e) {
+            setTodoArray(body.convertedTodoResponse);
+        } else {
+            setTodoArray(
+                body.convertedTodoResponse.filter(
+                    (row: Todo) =>
+                        row.TodoID! >= e * 10 - 9 && row.TodoID! <= e * 10
+                )
+            );
+        }
+    };
+
+    const ohChangeStatusPulldown = (e: string) => {
+        if (!e) {
+            setTodoArray(body.convertedTodoResponse);
+        } else {
+            setTodoArray(
+                body.convertedTodoResponse.filter(
+                    (row: Todo) => row.Status === e
+                )
+            );
+        }
+    };
+
+    const [footerClassName, setFooterClassName] = useState(styles.Footer);
+    const [toggleFooter, setToggleFooter] = useState(false);
+    const [footerMenuLabel, setFooterMenuLabel] = useState("Open Menu");
+    const onClickFooter = () => {
+        setToggleFooter(!toggleFooter);
+        // alert(toggleFooter);
+
+        if (toggleFooter) {
+            setFooterClassName(styles.Footer);
+            setFooterMenuLabel("Open Menu");
+        } else if (!toggleFooter) {
+            setFooterClassName(styles.onClickFooter);
+            setFooterMenuLabel("Close Menu");
+        }
+    };
 
     return (
         <Layout>
-            <Center mt={[4, 6, 12, 16, 20]} mb={[10, 10, 10, 10, 10]}>
-                <Stack mb={[1, 2, 3, 4, 5]}>
-                    <Heading size={["sm", "md", "lg", "xl", "2xl"]}>
-                        <Highlight
-                            query={"100 Things"}
-                            styles={{
-                                px: "2",
-                                py: "1",
-                                rounded: "full",
-                                bg: "red.100",
-                            }}
+            <Box className={styles.container}>
+                {/* タイトル */}
+                <Center mt={[4, 6, 10, 10, 10]} mb={[10, 10, 10, 10, 10]}>
+                    <Stack mb={[1, 2, 3, 4, 5]}>
+                        <Heading
+                            size={["sm", "md", "lg", "xl", "2xl"]}
+                            className={styles.heading}
+                            textAlign="center"
                         >
-                            100 Things What To Do With You !
-                        </Highlight>
-                    </Heading>
+                            一緒に したいこと １００
+                        </Heading>
+                    </Stack>
+                </Center>
 
-                    {/* <FormControl>
-              <HStack>
-                <Input
-                  placeholder="What do we do?"
-                  width={500}
-                  onChange={(e) => setInputTodo(e.target.value)}
-                  value={inputTodo}
-                />
-                <Button onClick={onClickSubmit}>Submit</Button>
-              </HStack>
-            </FormControl> */}
-                </Stack>
-            </Center>
-
-            <Center mb={10}>
-                {breakpoint === "base" || breakpoint === "sm" ? (
+                {/* カード */}
+                <Center>
                     <Grid
                         templateColumns={[
-                            "repeat(2, 1fr)", // md
-                            "repeat(2, 1fr)", // sm
+                            "repeat(1, 1fr)",
+                            "repeat(2, 1fr)",
+                            "repeat(2, 1fr)",
+                            "repeat(3, 1fr)",
+                            "repeat(4, 1fr)",
                         ]}
-                        gap={[1, 3, 10, 10, 6]}
-                        marginX={[1, 8, 10, 10, 10]}
-                        mb={1}
+                        gap={[8, 3, 10, 10, 6]}
+                        marginX={[8, 8, 10, 10, 10]}
+                        mb={10}
                     >
-                        {body.convertedTagResponse.map((tag: any) => {
-                            return (
-                                <GridItem key={tag.key}>
-                                    <ChakraTag
-                                        onClick={() =>
-                                            SearchTodoByTagName(tag.TagName)
-                                        }
-                                        mr={2}
-                                    >
-                                        {tag.TagName}
-                                    </ChakraTag>
-                                </GridItem>
-                            );
-                        })}
+                        {TodoArray.length !== 0 ? (
+                            TodoArray.sort((a: Todo, b: Todo) => {
+                                return a.TodoID! < b.TodoID! ? -1 : 1;
+                            }).map((todo: Todo) => {
+                                return (
+                                    <GridItem key={todo.TodoID}>
+                                        <TodoCard
+                                            TodoName={`#${todo.TodoID} ${todo.TodoName}`}
+                                            Location={todo.Location}
+                                            Key={todo.TodoID}
+                                            Tags={SearchTag(todo.TodoID!)}
+                                            CardImage={SearchImageURL(
+                                                todo.TodoID!
+                                            )}
+                                            Status={todo.Status!}
+                                        />
+                                    </GridItem>
+                                );
+                            })
+                        ) : (
+                            <div>No Data</div>
+                        )}
                     </Grid>
-                ) : (
-                    <>
-                        {body.convertedTagResponse.map((tag: any) => {
-                            return (
-                                <GridItem key={tag.key}>
-                                    <ChakraTag
-                                        onClick={() =>
-                                            SearchTodoByTagName(tag.TagName)
+                </Center>
+
+                {/* メニュー */}
+                <Center>
+                    <Box
+                        bg={"cyan.50"}
+                        borderTopRadius={"xl"}
+                        width={"80vw"}
+                        className={footerClassName}
+                    >
+                        <Center paddingY={5} onClick={() => onClickFooter()}>
+                            <Link as="b">{footerMenuLabel}</Link>
+                        </Center>
+                        {/* タグ */}
+                        <Center mb={10} mt={4}>
+                            {breakpoint === "base" || breakpoint === "sm" ? (
+                                <Grid
+                                    templateColumns={[
+                                        "repeat(2, 1fr)", // md
+                                        "repeat(2, 1fr)", // sm
+                                    ]}
+                                    gap={[1, 3, 10, 10, 6]}
+                                    marginX={[1, 8, 10, 10, 10]}
+                                    mb={1}
+                                >
+                                    {body.convertedTagResponse.map(
+                                        (tag: any) => {
+                                            return (
+                                                <GridItem key={tag.key}>
+                                                    <ChakraTag
+                                                        onClick={() =>
+                                                            SearchTodoByTagName(
+                                                                tag.TagName
+                                                            )
+                                                        }
+                                                        mr={2}
+                                                    >
+                                                        {tag.TagName}
+                                                    </ChakraTag>
+                                                </GridItem>
+                                            );
                                         }
-                                        mr={2}
+                                    )}
+                                </Grid>
+                            ) : (
+                                <>
+                                    {body.convertedTagResponse.map(
+                                        (tag: any) => {
+                                            return (
+                                                <GridItem key={tag.key}>
+                                                    <ChakraTag
+                                                        onClick={() =>
+                                                            SearchTodoByTagName(
+                                                                tag.TagName
+                                                            )
+                                                        }
+                                                        mr={2}
+                                                    >
+                                                        {tag.TagName}
+                                                    </ChakraTag>
+                                                </GridItem>
+                                            );
+                                        }
+                                    )}
+                                </>
+                            )}
+                        </Center>
+                        {/* プルダウン */}
+                        <Center mb={"10"}>
+                            {breakpoint === "base" ? (
+                                <Stack>
+                                    <Select
+                                        width={"200"}
+                                        placeholder="Select Todo No."
+                                        bg={"white"}
+                                        onChange={(e: any) =>
+                                            ohChangeTodoIDPulldown(
+                                                e.target.value
+                                            )
+                                        }
+                                        mb={"2"}
                                     >
-                                        {tag.TagName}
-                                    </ChakraTag>
-                                </GridItem>
-                            );
-                        })}
-                    </>
-                )}
-            </Center>
-            <Center>
-                <Grid
-                    templateColumns={[
-                        "repeat(1, 1fr)",
-                        "repeat(2, 1fr)",
-                        "repeat(2, 1fr)",
-                        "repeat(3, 1fr)",
-                        "repeat(4, 1fr)",
-                    ]}
-                    gap={[8, 3, 10, 10, 6]}
-                    marginX={[8, 8, 10, 10, 10]}
-                    mb={10}
-                >
-                    {TodoArray.length !== 0 ? (
-                        TodoArray.sort((a: Todo, b: Todo) => {
-                            return a.TodoID! < b.TodoID! ? -1 : 1;
-                        }).map((todo: Todo) => {
-                            return (
-                                <GridItem key={todo.TodoID}>
-                                    <TodoCard
-                                        TodoName={`#${todo.TodoID} ${todo.TodoName}`}
-                                        Location={todo.Location}
-                                        Key={todo.TodoID}
-                                        Tags={SearchTag(todo.TodoID!)}
-                                        CardImage={SearchImageURL(todo.TodoID!)}
-                                        Status={todo.Status!}
-                                    />
-                                </GridItem>
-                            );
-                        })
-                    ) : (
-                        <div>No Data</div>
-                    )}
-                </Grid>
-            </Center>
+                                        <option value={1}>#1-#10</option>
+                                        <option value={2}>#11-#20</option>
+                                        <option value={3}>#21-#30</option>
+                                        <option value={4}>#31-#40</option>
+                                        <option value={5}>#41-#50</option>
+                                        <option value={6}>#51-#60</option>
+                                        <option value={7}>#61-#70</option>
+                                        <option value={8}>#71-#80</option>
+                                        <option value={9}>#81-#90</option>
+                                        <option value={10}>#91-#100</option>
+                                    </Select>
+                                    <Select
+                                        width={"200"}
+                                        placeholder="Select Status"
+                                        bg={"white"}
+                                        onChange={(e: any) =>
+                                            ohChangeStatusPulldown(
+                                                e.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value={"Undone"}>Undone</option>
+                                        <option value={"Planning"}>
+                                            Planning
+                                        </option>
+                                        <option value={"Done"}>Done</option>
+                                    </Select>
+                                </Stack>
+                            ) : (
+                                <HStack>
+                                    <Select
+                                        width={"200"}
+                                        placeholder="Select Todo No."
+                                        bg={"white"}
+                                        onChange={(e: any) =>
+                                            ohChangeTodoIDPulldown(
+                                                e.target.value
+                                            )
+                                        }
+                                        mr={["2", "2", "6", "10", "10"]}
+                                    >
+                                        <option value={1}>#1-#10</option>
+                                        <option value={2}>#11-#20</option>
+                                        <option value={3}>#21-#30</option>
+                                        <option value={4}>#31-#40</option>
+                                        <option value={5}>#41-#50</option>
+                                        <option value={6}>#51-#60</option>
+                                        <option value={7}>#61-#70</option>
+                                        <option value={8}>#71-#80</option>
+                                        <option value={9}>#81-#90</option>
+                                        <option value={10}>#91-#100</option>
+                                    </Select>
+                                    <Select
+                                        width={"200"}
+                                        placeholder="Select Status"
+                                        bg={"white"}
+                                        onChange={(e: any) =>
+                                            ohChangeStatusPulldown(
+                                                e.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value={"Undone"}>Undone</option>
+                                        <option value={"Planning"}>
+                                            Planning
+                                        </option>
+                                        <option value={"Done"}>Done</option>
+                                    </Select>
+                                </HStack>
+                            )}
+                        </Center>
+                        <Center mb={14}>
+                            <Link
+                                onClick={() =>
+                                    window.scrollTo({
+                                        top: 0,
+                                        behavior: "smooth",
+                                    })
+                                }
+                                as="b"
+                            >
+                                ▲Page Top
+                            </Link>
+                        </Center>
+                    </Box>
+                </Center>
+            </Box>
         </Layout>
     );
 };

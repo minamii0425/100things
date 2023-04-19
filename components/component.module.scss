@@ -1,0 +1,16 @@
+.cardBody {
+    background-color: white;
+    // Todoカードにマウスオーバーした時
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.card:hover {
+    transform: translate(3px, 5px);
+    transition: 0.5s;
+}
+
+.cardFooter {
+    background-color: white;
+}

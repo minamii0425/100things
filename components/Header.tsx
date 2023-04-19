@@ -52,10 +52,10 @@ const NAV_ITEMS: Array<NavItem> = [
         label: "What's this Site",
         href: "/about",
     },
-    {
-        label: "100 Things",
-        href: "/todos",
-    },
+    // {
+    //     label: "100 Things",
+    //     href: "/todos",
+    // },
     {
         label: "Album",
         href: "/album",
@@ -116,8 +116,8 @@ const Header = (props: HeaderUserProps) => {
     return (
         <Box>
             <Flex
-                bg={useColorModeValue("white", "gray.800")}
-                color={useColorModeValue("gray.600", "white")}
+                bg={useColorModeValue("9DECF9", "gray.800")} // 背景色
+                color={useColorModeValue("gray.600", "white")} // 文字色
                 minH={"60px"}
                 py={{ base: 2 }}
                 px={{ base: 4 }}
@@ -125,7 +125,7 @@ const Header = (props: HeaderUserProps) => {
                 borderStyle={"solid"}
                 borderColor={useColorModeValue("gray.200", "gray.900")}
                 align={"center"}
-                // position="absolute"
+                // position="sticky"
             >
                 <Flex
                     flex={{ base: 1, md: "auto" }}
@@ -149,16 +149,17 @@ const Header = (props: HeaderUserProps) => {
                     flex={{ base: 1 }}
                     justify={{ base: "center", md: "start" }}
                 >
-                    <Text
+                    <Link
                         textAlign={useBreakpointValue({
                             base: "center",
                             md: "left",
                         })}
                         fontFamily={"heading"}
-                        color={useColorModeValue("gray.800", "white")}
+                        color={useColorModeValue("white", "white")}
+                        href={"/todos"}
                     >
                         100Things
-                    </Text>
+                    </Link>
 
                     <Flex display={{ base: "none", md: "flex" }} ml={10}>
                         <DesktopNav />
@@ -238,7 +239,7 @@ const Header = (props: HeaderUserProps) => {
 export default Header;
 
 const DesktopNav = () => {
-    const linkColor = useColorModeValue("gray.600", "gray.200");
+    const linkColor = useColorModeValue("gray.50", "gray.200");
     const linkHoverColor = useColorModeValue("gray.800", "white");
     const popoverContentBgColor = useColorModeValue("white", "gray.800");
 
@@ -337,7 +338,7 @@ const DesktopSubNav = ({ label, href, subLabel }: NavItem) => {
 const MobileNav = () => {
     return (
         <Stack
-            bg={useColorModeValue("white", "gray.800")}
+            bg={useColorModeValue("#EDFDFD", "gray.800")}
             p={4}
             display={{ md: "none" }}
         >
