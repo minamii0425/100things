@@ -227,17 +227,17 @@ const Todos = ({ body }: any) => {
 
     const [footerClassName, setFooterClassName] = useState(styles.Footer);
     const [toggleFooter, setToggleFooter] = useState(false);
-    const [footerMenuLabel, setFooterMenuLabel] = useState("Open Menu");
+    const [footerMenuLabel, setFooterMenuLabel] = useState("▲ Open Menu");
     const onClickFooter = () => {
         setToggleFooter(!toggleFooter);
         // alert(toggleFooter);
 
         if (toggleFooter) {
             setFooterClassName(styles.Footer);
-            setFooterMenuLabel("Open Menu");
+            setFooterMenuLabel("▲ Open Menu");
         } else if (!toggleFooter) {
             setFooterClassName(styles.onClickFooter);
-            setFooterMenuLabel("Close Menu");
+            setFooterMenuLabel("▼ Close Menu");
         }
     };
 
@@ -259,41 +259,43 @@ const Todos = ({ body }: any) => {
 
                 {/* カード */}
                 <Center>
-                    <Grid
-                        templateColumns={[
-                            "repeat(1, 1fr)",
-                            "repeat(2, 1fr)",
-                            "repeat(2, 1fr)",
-                            "repeat(3, 1fr)",
-                            "repeat(4, 1fr)",
-                        ]}
-                        gap={[8, 3, 10, 10, 6]}
-                        marginX={[8, 8, 10, 10, 10]}
-                        mb={10}
-                    >
-                        {TodoArray.length !== 0 ? (
-                            TodoArray.sort((a: Todo, b: Todo) => {
-                                return a.TodoID! < b.TodoID! ? -1 : 1;
-                            }).map((todo: Todo) => {
-                                return (
-                                    <GridItem key={todo.TodoID}>
-                                        <TodoCard
-                                            TodoName={`#${todo.TodoID} ${todo.TodoName}`}
-                                            Location={todo.Location}
-                                            Key={todo.TodoID}
-                                            Tags={SearchTag(todo.TodoID!)}
-                                            CardImage={SearchImageURL(
-                                                todo.TodoID!
-                                            )}
-                                            Status={todo.Status!}
-                                        />
-                                    </GridItem>
-                                );
-                            })
-                        ) : (
-                            <div>No Data</div>
-                        )}
-                    </Grid>
+                    <Box mb={20}>
+                        <Grid
+                            templateColumns={[
+                                "repeat(1, 1fr)",
+                                "repeat(2, 1fr)",
+                                "repeat(2, 1fr)",
+                                "repeat(3, 1fr)",
+                                "repeat(4, 1fr)",
+                            ]}
+                            gap={[8, 3, 10, 10, 6]}
+                            marginX={[8, 8, 10, 10, 10]}
+                            mb={10}
+                        >
+                            {TodoArray.length !== 0 ? (
+                                TodoArray.sort((a: Todo, b: Todo) => {
+                                    return a.TodoID! < b.TodoID! ? -1 : 1;
+                                }).map((todo: Todo) => {
+                                    return (
+                                        <GridItem key={todo.TodoID}>
+                                            <TodoCard
+                                                TodoName={`#${todo.TodoID} ${todo.TodoName}`}
+                                                Location={todo.Location}
+                                                Key={todo.TodoID}
+                                                Tags={SearchTag(todo.TodoID!)}
+                                                CardImage={SearchImageURL(
+                                                    todo.TodoID!
+                                                )}
+                                                Status={todo.Status!}
+                                            />
+                                        </GridItem>
+                                    );
+                                })
+                            ) : (
+                                <div>No Data</div>
+                            )}
+                        </Grid>
+                    </Box>
                 </Center>
 
                 {/* メニュー */}
@@ -457,7 +459,7 @@ const Todos = ({ body }: any) => {
                                 }
                                 as="b"
                             >
-                                ▲Page Top
+                                Page Top
                             </Link>
                         </Center>
                     </Box>
